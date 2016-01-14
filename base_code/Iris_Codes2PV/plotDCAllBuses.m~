@@ -1,0 +1,25 @@
+function [] = plotDCAllBuses(dcFrac, storageFrac, optimalStorage)
+
+bar([dcFrac, storageFrac], 'grouped');
+    
+x_label = xlabel('Bus Location');
+y_label = ylabel('Violation Frequency');
+
+set(x_label, 'FontSize', 14);
+set(y_label, 'FontSize', 14);
+
+l = legend('Data Center', 'Storage')
+set(l, 'FontSize
+
+ylim([min(storageFrac) - 0.1, max(storageFrac) + 0.3])
+
+hold on;
+
+x = 0:1:length(frac)+1;
+xlim([min(x), max(x)])
+optimal = optimalStorageFrac*ones(1,length(x));
+plot(x,optimal,'-r')
+
+
+end
+
