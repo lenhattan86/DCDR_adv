@@ -1,3 +1,5 @@
+init_settings
+%%
 % test function nonviolationfraction
 
 load testdayirrad.mat

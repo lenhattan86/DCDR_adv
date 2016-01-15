@@ -1,3 +1,5 @@
+init_settings
+%%
 load testdayirrad.mat
 
 % Change stuff here
