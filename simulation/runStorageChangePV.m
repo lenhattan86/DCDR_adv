@@ -1,4 +1,4 @@
-load testdayirrad.mat
+load([trace_path 'testdayirrad.mat']);
 
 % Change stuff here
 power_case = case47custom;

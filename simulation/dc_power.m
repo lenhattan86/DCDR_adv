@@ -1,6 +1,6 @@
 % test function nonviolationfraction
 
-load testdayirrad.mat
+load([trace_path 'testdayirrad.mat']);
 
 % generate data center demand traces
 interactive_raw = load('traces/SAPnew/sapTrace.tab');
@@ -72,4 +72,3 @@ plot(capacities(:),businbounds(:), 'ro')
 plot(capacities(:),violation_log10(:), 'bs')
 axis([0 max(capacities) -4 1.05])
 hold off
-

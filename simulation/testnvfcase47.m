@@ -1,6 +1,6 @@
 % test function nonviolationfraction
 
-load testdayirrad.mat % load one-month PV data for every minute
+load([trace_path 'testdayirrad.mat']); % load one-month PV data for every minute
 
 power_case = case47custom;
 

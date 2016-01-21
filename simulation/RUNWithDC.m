@@ -2,7 +2,7 @@ init_settings
 %%
 % test function nonviolationfraction
 
-load testdayirrad.mat
+load([trace_path 'testdayirrad.mat']);
 
 % generate data center demand traces
 interactive_raw = load('traces/SAPnew/sapTrace.tab');
@@ -52,9 +52,9 @@ numBuses = 47;
 % DCcapacities = [70,80,90,95,100,105,110,115,120,125];
 % DCcapacities = 118.8700;
 DCcapacities = 20;
-p = 0:0.1:0.5;
-dcBus = 2;
-pvBus = 45;
+p = 0:0.1:0.5; % flexibility of data centers
+dcBus = 2; % dc bus location
+pvBus = 45; % bus location of PV
 
 PVcapacity = 30;
 violationFreq = zeros(length(dcBus), length(p));
