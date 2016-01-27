@@ -12,11 +12,7 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of pf
 % analysis
 %% Main inputs
-res_time = 1/100; % responsive time (sec).
-mu_0 = 1/res_time + interactive; % default service rate of data center
-p = 0:0.1:0.5; % flexiblity of delaying interactive workload.
-P_0 = 1; % power consumption for 1 request.
-P_interactive = mu_0*P_0; % power consumption for interactive workload
+p = 0:0.1:0.5; % relaxing the ending time.
 
 %% Grid settings
 power_case = case47custom;

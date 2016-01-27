@@ -47,3 +47,7 @@ demand_flat = PUE.*(interactive + sum(b_flat,2));
 dc_power = demand_flat;
 dc_ratio = 1;
 %dc_power = zeros(required_length,1);
+
+%% common constants
+HOUR = 60/time_interval; % number of timeslots an hour.
+DAY = 24*HOUR; % number of timeslots a day.

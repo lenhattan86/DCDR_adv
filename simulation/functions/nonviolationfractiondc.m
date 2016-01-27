@@ -92,7 +92,7 @@ for i = 1:tsteps
         end
     else
         temp_case.bus(dcBus,3) = temp_case.bus(dcBus,3) + dc_pwr(i);
-        [newResults, success] = runpf(temp_case, options);
+        [newResults, success] = runpf(temp_case, options); %or runopf
         
         violatedBuses = findViolated(newResults.bus(:,8), maxVoltage, minVoltage);
         violations = length(violatedBuses);
