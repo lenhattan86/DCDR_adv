@@ -1,15 +1,16 @@
-function [violationFreq] = nonviolationBatchjobs(pwr_case, pv_cap, irrad_time,...
-    pct_load, dc_power, dc_ratio, dc_cap, bjDelay , A_SE, BS, b_flat,  interactive , options, dcBus, numBuses, pvBus, verbose)
-    % Todo: Given the ending time for batch jobs
-    
+function [violationFreq] = ...
+    nonviolation_workload(pwr_case, pv_cap, irrad_time,...
+    pct_load, dc_power, dc_ratio, dc_cap, ...
+    A_bj, BS, a, ...
+    options, dcBus, numBuses, pvBus, verbose)
 
-    p = 0.5; % need to decide by the ratio of batch job power/total DC power.
-    
-    tsteps  = length(irrad_time);
-    dc_rate = mean(irrad_time/1000*pv_cap)*dc_ratio/mean(dc_power);
+    % Scale the power consumption of data center corresponding to the
+    % PV generation.    
+    T  = length(dc_power);
+    dc_rate = 0.8*dc_cap/max(dc_power);%mean(irrad_time/1000*pv_cap)*dc_ratio/mean(dc_power);
     dc_pwr  = dc_power*dc_rate;
-    a = interactive*dc_rate;
-    bs = BS*dc_rate;
+    a = a*dc_rate;
+    BS = BS * dc_rate;
     
     BN = size(BS,1); % total number of batch jobs.
     
@@ -18,27 +19,22 @@ function [violationFreq] = nonviolationBatchjobs(pwr_case, pv_cap, irrad_time,..
     % Prepare the matrix of possible loads
     % Select n evenly distributed loads between the bounds of DC
             % Bounds of DC
-                
-    numLoads = floor(dc_cap/mean(bs));    
+    POWER_UNIT =  mean(BS);
+            
+            
+    numLoads = floor(dc_cap/mean(POWER_UNIT));
     L = numLoads+1;
     
-    upperBound = mean(bs)*numLoads;
+    upperBound = mean(BS)*numLoads;
     lowerBound = 0;
     
     loadIntervals = 0:1:numLoads;
     selectedLoadsForDC = ((upperBound - lowerBound)/numLoads).*loadIntervals + lowerBound;
+    loadLevels = repmat(selectedLoadsForDC',1,T);
     
-    % prepare for step 2
-    Aeq_2 = ones(1,(L)*tsteps); % selected loads list
-    A_bj = ones(1,(L)*tsteps); % selected loads list
-    for i = 1:tsteps
-        Aeq_2((i-1)*(L)+1: (i)*(L)) = selectedLoadsForDC;    
-%         A_bj((i-1)*(L)+1: (i)*(L))  = selectedLoadsForDC-a(i);
-        A_bj((i-1)*(L)+1: (i)*(L))  = selectedLoadsForDC;
-    end
-    
-    W = zeros(numLoads, tsteps);
-    for i = 1:tsteps
+
+    W = zeros(numLoads, T);
+    for i = 1:T
         temp_case = pwr_case;
         temp_case.bus(:,[3,4]) = pct_load(i) * temp_case.bus(:,[3,4]);
 
@@ -55,7 +51,7 @@ function [violationFreq] = nonviolationBatchjobs(pwr_case, pv_cap, irrad_time,..
         if success == 0
             fprintf('Initial onvergence failure: PV_capacity = %d, time = %d\n',...
                 pv_cap, i);
-            error('Power consumption is too high?');
+            error('Power consumption may be too high?');
             break;
         end
 
@@ -77,7 +73,7 @@ function [violationFreq] = nonviolationBatchjobs(pwr_case, pv_cap, irrad_time,..
             temp_case.bus(dcBus,3) = temp_case.bus(dcBus,3) - previousLoad;
             temp_case.bus(dcBus,3) = temp_case.bus(dcBus,3) + selectedLoadsForDC(idx);
 
-            [newResults, success] = runpf(temp_case, options);runopf
+            [newResults, success] = runpf(temp_case, options);
             if success == 0
                 fprintf('Convergence failure: PV_capacity = %d, time = %d\n',...
                     pv_cap, i);
@@ -107,48 +103,21 @@ function [violationFreq] = nonviolationBatchjobs(pwr_case, pv_cap, irrad_time,..
     end
     
     %% Step 2: Optimzie the violation frequency    
+
+    cvx_begin
+        variable X(L,T) binary;
+        variable bColo(BN,T);
+        minimize( sum(sum(W.*X)) );
+        subject to
+            sum(X)==ones(1,T); % load selection constraint.
+            sum(sum(loadLevels.*X)) <= sum(dc_pwr) + POWER_UNIT/2; % total power constraint.  
+            sum(sum(loadLevels.*X)) >= sum(dc_pwr) - POWER_UNIT/2; % total power constraint.  
+            sum(A_bj.*bColo, 1) + a' >= sum(loadLevels.*X,1); % mapping colocating power with load levels
+            sum(bColo,2) == BS; % batchjob colocation constraint     
+            bColo(BN,T) >=0;
+    cvx_end   
+    total_power_err = sum(sum(loadLevels.*X)) - sum(dc_pwr);
+    bj_err = sum(A_bj.*bColo, 1) + a' - sum(loadLevels.*X,1);
     
-%     W = randn((L), tsteps);
-    
-    % objective function
-    f = reshape(W,(L)*tsteps,1);
-    intcon = 1:(L)*tsteps;    
-    
-    % equality constraints
-    load_ones = ones(1,(L));
-    Aeq_1 = zeros(tsteps,(L)*tsteps); % select 1 load level each time slot   
-    for i=1:tsteps
-        Aeq_1(i,(i-1)*(L)+1: (i)*(L)) = load_ones;
-    end    
-    beq_1 = ones(tsteps,1); 
-    
-    A_SE_dup = zeros(BN,L*tsteps);
-    for l = 1:L
-        A_SE_dup(:,l:L:L*tsteps) = A_SE;
-    end
-    A_bj_dup = zeros(BN,L*tsteps);
-    for n=1:BN
-        A_bj_dup(n,:) = A_bj;
-    end
-    Aeq_3 = A_SE_dup.*A_bj_dup;  beq_3 = bs; % maintain the total batch job power
-    
-    Aeq = vertcat(Aeq_1, Aeq_3);
-    beq = vertcat(beq_1, beq_3);
-%     Aeq = Aeq_1;
-%     beq = beq_1;
-    
-    % inequality constraints.
-    beq_2 = sum(dc_pwr); % maintain the total power.
-%     A = Aeq_2;
-%     b = beq_2;
-    A = [];
-    b = [];
-    
-    lb = zeros((L)*tsteps,1);
-    ub = ones((L)*tsteps,1);
-    options = optimoptions('intlinprog','Display','final');   
-    
-    [x,fval,exitflag,output] = intlinprog(f,intcon,A,b,Aeq,beq,lb,ub,options);    
     %% step 3: return results
-    violationFreq = fval/(tsteps*numBuses);
-end
+    violationFreq = sum(sum(W.*X))/(T*numBuses);

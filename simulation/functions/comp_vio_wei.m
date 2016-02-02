@@ -1,17 +1,24 @@
-function [violationFreq] = nonviolationInteractive(pwr_case, pv_cap, irrad_time,...
-    pct_load, dc_power, interactive, dc_cap, ...
-    aFlexiblitiesUpperBound, aFlexiblitiesLowerBound, ...
+function [W, loadLevels] = comp_vio_wei(pwr_case, pv_cap, irrad_time,...
+    pct_load, dc_cap, POWER_UNIT, ...    
     options, dcBus, numBuses, pvBus, verbose)
 
-    numLoads = 20;
+    % Scale the power consumption of data center corresponding to the
+    % PV generation.       
+    T = length(irrad_time);       
+   
+          
+    numLoads = floor(dc_cap/mean(POWER_UNIT));
+   
+    upperBound = POWER_UNIT*numLoads;
+    lowerBound = 0;
+    
+    loadIntervals = 0:1:numLoads;
+    selectedLoadsForDC = ((upperBound - lowerBound)/numLoads).*loadIntervals + lowerBound;
+    loadLevels = repmat(selectedLoadsForDC',1,T);
+    
 
-    out_bounds = 0;
-    tsteps = length(irrad_time);
-%     dc_power = dc_power/mean(dc_power)*mean(irrad_time/1000*pv_cap)*dc_ratio;
-
-    total_ranges = 0;
-
-    for i = 1:tsteps
+    W = zeros(numLoads, T);
+    for i = 1:T
         temp_case = pwr_case;
         temp_case.bus(:,[3,4]) = pct_load(i) * temp_case.bus(:,[3,4]);
 
@@ -21,10 +28,6 @@ function [violationFreq] = nonviolationInteractive(pwr_case, pv_cap, irrad_time,
         % Set up PV and DC bus loads
         temp_case.bus(pvBus,3) = temp_case.bus(pvBus,3) - pv_pwr;
 
-        % Bounds of DC
-        upperBound = min(dc_power(i) + aFlexiblitiesUpperBound*interactive(i) , dc_cap);
-        lowerBound = max(dc_power(i) - aFlexiblitiesLowerBound*interactive(i) , 0);
-
         maxVoltage = temp_case.bus(1,12);
         minVoltage = temp_case.bus(1,13);
 
@@ -32,20 +35,10 @@ function [violationFreq] = nonviolationInteractive(pwr_case, pv_cap, irrad_time,
         if success == 0
             fprintf('Initial onvergence failure: PV_capacity = %d, time = %d\n',...
                 pv_cap, i);
+            error('Power consumption may be too high?');
             break;
         end
 
-        % Select n evenly distributed loads between the bounds of DC
-        if upperBound < lowerBound
-            % Never happens...
-            disp('Upper bound less than lower bound.');
-            selectedLoadsForDC = dc_power(i);
-        else
-            loadIntervals = 0:1:numLoads;
-            selectedLoadsForDC = ((upperBound - lowerBound)/numLoads).*loadIntervals + lowerBound;
-            total_ranges = total_ranges + (upperBound - lowerBound);
-        end
-        
         violations = zeros(1,length(selectedLoadsForDC));
         previousLoad = 0;
         for idx = 1:length(selectedLoadsForDC)
@@ -64,13 +57,9 @@ function [violationFreq] = nonviolationInteractive(pwr_case, pv_cap, irrad_time,
             end
 
             violatedBuses = findViolated(newResults.bus(:,8), maxVoltage, minVoltage);
-            violations(idx) = length(violatedBuses);
-            previousLoad = selectedLoadsForDC(idx);
+            W(idx, i) = length(violatedBuses);
+            previousLoad = selectedLoadsForDC(idx);            
         end
-
-        smallestViolations = min(violations);
-        out_bounds = out_bounds + smallestViolations;
     end
-
-    violationFreq = out_bounds / (tsteps*numBuses);
+    W = W/(T*numBuses);
 end

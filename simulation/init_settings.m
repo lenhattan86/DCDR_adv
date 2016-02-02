@@ -1,53 +1,74 @@
 clear all; close all; clc;
+cvx_solver Gurobi;
+s_quiet = cvx_quiet(true);
+s_pause = cvx_pause(false);
+cvx_precision low;
 
 addpath('lib/matpower4.1');
 addpath('lib/matpower4.1/t');
 addpath('functions');
 
-fig_path = 'figs/';
-results_path = 'results/';
-trace_path = 'traces/';
+FIG_PATH = 'figs/';
+RESULT_PATH = 'results/';
+TRACE_PATH = 'traces/';
 
-%% Load and setup data
+IS_GENERATE_DATA = 1;
+if IS_GENERATE_DATA
+    %% common constants
+    sampling_interval = 5; % minutes.
+    time_interval = 5; % in minutes
+    HOUR = 60/sampling_interval; % number of timeslots an hour.
+    DAY = 24*HOUR; % number of timeslots a day.
+    T = 1*DAY; %1440; % per minute data
+    %% PV generation
+    load([TRACE_PATH 'testdayirrad.mat']);
+    PVcapacity = 30;
+    
+    %% data center
+    PUE_orig = [1.16,1.17,1.16,1.20,1.22,1.22,1.24,1.26,1.35,1.32,1.25, ...
+        1.30,1.29,1.35,1.32,1.40,1.40,1.25,1.29,1.30,1.28,1.29,1.18,1.13]';
+    PUE = reshape((1+0.2*(rand(T/24,1)-0.5))*PUE_orig',T,1);
+    dc_cap = 20;
+    dc_ratio = 1;
+    %dc_power = zeros(T,1);
+    
+    %% workload
+    % generate data center demand traces
+    interactive_raw = load('traces/SAPnew/sapTrace.tab');
+    col = 4; % column of the data loaded
 
-% test function nonviolationfraction
 
-load([trace_path 'testdayirrad.mat']);
+    t_raw = linspace(0,T,T/time_interval+1);
+    t = linspace(0,T,T+1);
+    inter_tmp = interp1q(t_raw',interactive_raw(1:T*sampling_interval/time_interval+1,4),t');
+    a = inter_tmp(1:T); % interactive workload
 
-% generate data center demand traces
-interactive_raw = load('traces/SAPnew/sapTrace.tab');
-col = 4; % column of the data loaded
-time_interval = 5; % in minutes
-required_length = 1440; % per minute data
-t_raw = linspace(0,required_length,required_length/time_interval+1);
-t = linspace(0,required_length,required_length+1);
-inter_tmp = interp1q(t_raw',interactive_raw(1:required_length/time_interval+1,4),t');
-interactive = inter_tmp(1:required_length);
+    
+    au = 0.4; % average utilization of a workloads
+    con = 0.9; % maximum utilization after consolidation
+    peak_to_cap_ratio = 0.7;
+    
+    
+    BN = 5; % average number of jobs per time slot.
+    BM = 0.5; % power ratio of batch jobs vs. interactive workload.
+    
+    % generate the raw Batch jobs and a workload
+    [A_bj, BS, S, E] = batch_job_generator(T,BN*T, 'Uniform',1,1, ...
+        BM/(1-BM)*sum(mean(a)./au)/con); % generate batch jobs based on statistical properties
+    % compute the weight matrix of violation frequency
+    b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
+    dc_power = a + sum(b_flat,1)';
+    dc_scale = peak_to_cap_ratio*dc_cap/max(dc_power);
+    dc_power = dc_power*dc_scale;
+    a = a *dc_scale;
+    BS = BS * dc_scale;
+    
+    %% electricity grid
 
-batch_ratio = 1; % mean of batch / mean of interactive
-% batch workload
-num_batch = 2;
-for i = 1:1:num_batch % batch workload demand, from model
-    B(i) = batch_ratio*sum(interactive(1:required_length))/num_batch;
+    %% DR programs    
+
+    %% Save the prepared data 
+    save([RESULT_PATH 'init_settings.mat']) 
+else
+    load([RESULT_PATH 'init_settings.mat']);
 end
-A = zeros(required_length, num_batch); % availability
-S = [1,required_length/2+1]; % start time
-E = [required_length/2,required_length]; % end time
-D = 1; % total number of days
-b_flat = zeros(required_length,num_batch);
-for d = 1:1:D
-    for n = 1:1:num_batch
-        A((d-1)*24+S(n):(d-1)*24+E(n),n) = ones(E(n)-S(n)+1,1);
-        b_flat(S(n)+(d-1)*24:E(n)+(d-1)*24,n) = B(n)/(E(n)-S(n)+1);
-    end
-end
-PUE_orig = [1.16,1.17,1.16,1.20,1.22,1.22,1.24,1.26,1.35,1.32,1.25,1.30,1.29,1.35,1.32,1.40,1.40,1.25,1.29,1.30,1.28,1.29,1.18,1.13]';
-PUE = reshape((1+0.2*(rand(required_length/24,1)-0.5))*PUE_orig',required_length,1);
-demand_flat = PUE.*(interactive + sum(b_flat,2));
-dc_power = demand_flat;
-dc_ratio = 1;
-%dc_power = zeros(required_length,1);
-
-%% common constants
-HOUR = 60/time_interval; % number of timeslots an hour.
-DAY = 24*HOUR; % number of timeslots a day.
