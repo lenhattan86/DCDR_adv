@@ -24,12 +24,11 @@ max_QoS_delay = max(QoS_delay);
 interactive_QoS_delay = [1.1:0.1:1.5]*max_QoS_delay;
 
 %%
-%TODO: step 1: use max_QoS_delay & interactive_QoS_delay to compute 
 % aFlexiblitiesUpperBound & aFlexiblitiesLowerBound
 
-aFlexiblitiesUpperBound = [0.1:0.1:0.5]; % max (dc_cap, interactive)
-aFlexiblitiesLowerBound = [0.1:0.1:0.5]; % min (0, a).
-
+aFlexiblitiesUpperBound = [0.1:0.1:0.5] * dc_cap; % max (dc_cap, interactive)
+aFlexiblitiesLowerBound = [0.1:0.1:0.5] * (min(service_rate - (interactive_QoS_delay).^(-1))); % min (0, a).
+aFlexiblities = (service_rate - (interactive_QoS_delay).^(-1));
 
 %% Grid settings
 power_case = case47custom;
@@ -54,7 +53,24 @@ for b = 1:length(dcBus)
         opt, dcBus, numBuses, pvBus, verbose);
     end
 end
-violationFreq
+% violationFreq
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
+x = [0,([0.1:0.1:0.5])];
+
+hold on
+plot(interactive_QoS_delay(:),violationFreq(1,:), '-ok', 'LineWidth', 4);
+% plot(x,[optimalBus,optimalBus], '--r', 'LineWidth', 4);
+% plot(x,[optimal,optimal],'-b', 'LineWidth', 2);
+
+h_legend = legend('QoS');
+    
+x_label = xlabel('QoS');
+y_label = ylabel('Violation Frequency');
+set(x_label, 'FontSize', 14);
+set(y_label, 'FontSize', 14);
+set(h_legend,'FontSize',14);  
+
+ylim([0, 0.4])
+
 save([RESULT_PATH 'script_interactive.mat']);
