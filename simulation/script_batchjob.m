@@ -16,7 +16,7 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % analysis
 
 %% workload configuration
-bjEnd = [0:2:10]*HOUR;
+bjEnd = [0:1:10]*HOUR;
 
 %% Grid settings
 power_case = case47custom;

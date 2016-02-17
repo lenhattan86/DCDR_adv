@@ -63,9 +63,19 @@ if IS_GENERATE_DATA
     a = a *dc_scale;
     BS = BS * dc_scale;
     
+    %% temperature in a day
+    %  http://www.accuweather.com/en/us/new-york-ny/10007/hourly-weather-forecast/349727?hour=0
+    hourly_temp = [42 41 39 38 36 35 34 34 35 38 42 44 45 46 47 47 46 45 42 40 39 39 38 36]; % in Fahrenheit
+%     t_raw = 1:24;
+%     t = 1:0.5:24+0.5
+%     temp = interp1q(t_raw, hourly_temp, t);
+    t_OA = ones(1,T)*mean(hourly_temp);
+    
     %% electricity grid
 
     %% DR programs    
+    
+    
 
     %% Save the prepared data 
     save([RESULT_PATH 'init_settings.mat']) 

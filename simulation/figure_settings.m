@@ -12,6 +12,6 @@ lineWitdth = 4;
 patternDC = '-ok';
 patternES = '--b';
 
-FIG_PATH = 'figs/';
+fig_path = '../../../figs/';
 
 figure_size = [0.0 0 4.0 3.5];
