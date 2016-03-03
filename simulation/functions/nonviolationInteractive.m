@@ -22,8 +22,8 @@ function [violationFreq] = nonviolationInteractive(pwr_case, pv_cap, irrad_time,
         temp_case.bus(pvBus,3) = temp_case.bus(pvBus,3) - pv_pwr;
 
         % Bounds of DC
-        upperBound = min(dc_power(i) + aFlexiblitiesUpperBound*interactive(i) , dc_cap);
-        lowerBound = max(dc_power(i) - aFlexiblitiesLowerBound*interactive(i) , 0);
+        upperBound = min(dc_power(i) + aFlexiblitiesUpperBound(i)*interactive(i) , dc_cap);
+        lowerBound = max(dc_power(i) - aFlexiblitiesLowerBound(i)*interactive(i) , 0);
 
         maxVoltage = temp_case.bus(1,12);
         minVoltage = temp_case.bus(1,13);

@@ -20,6 +20,8 @@ if IS_GENERATE_DATA
     HOUR = 60/sampling_interval; % number of timeslots an hour.
     DAY = 24*HOUR; % number of timeslots a day.
     T = 1*DAY; %1440; % per minute data
+    
+    
     %% PV generation
     load([TRACE_PATH 'testdayirrad.mat']);
     PVcapacity = 30;
@@ -32,36 +34,40 @@ if IS_GENERATE_DATA
     dc_ratio = 1;
     %dc_power = zeros(T,1);
     
+    POWER_UNIT =  dc_cap/40;
     %% workload
     % generate data center demand traces
     interactive_raw = load('traces/SAPnew/sapTrace.tab');
     col = 4; % column of the data loaded
 
-
     t_raw = linspace(0,T,T/time_interval+1);
     t = linspace(0,T,T+1);
     inter_tmp = interp1q(t_raw',interactive_raw(1:T*sampling_interval/time_interval+1,4),t');
     a = inter_tmp(1:T); % interactive workload
-
+    
     
     au = 0.4; % average utilization of a workloads
     con = 0.9; % maximum utilization after consolidation
     peak_to_cap_ratio = 0.7;
     
-    
-    BN = 5; % average number of jobs per time slot.
+    BN = 10; % average number of jobs per time slot.
     BM = 0.5; % power ratio of batch jobs vs. interactive workload.
     
     % generate the raw Batch jobs and a workload
     [A_bj, BS, S, E] = batch_job_generator(T,BN*T, 'Uniform',1,1, ...
         BM/(1-BM)*sum(mean(a)./au)/con); % generate batch jobs based on statistical properties
-    % compute the weight matrix of violation frequency
+    % compute the weight matrix of violation frequency  
     b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
     dc_power = a + sum(b_flat,1)';
     dc_scale = peak_to_cap_ratio*dc_cap/max(dc_power);
-    dc_power = dc_power*dc_scale;
     a = a *dc_scale;
-    BS = BS * dc_scale;
+    BS = BS * dc_scale;   
+    
+    
+    BS = round(BS/POWER_UNIT)*POWER_UNIT;
+    b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
+    a = round(a/POWER_UNIT)*POWER_UNIT;
+    dc_power = a + sum(b_flat,1)';
     
     %% temperature in a day
     %  http://www.accuweather.com/en/us/new-york-ny/10007/hourly-weather-forecast/349727?hour=0
@@ -73,8 +79,7 @@ if IS_GENERATE_DATA
     
     %% electricity grid
 
-    %% DR programs    
-    
+    %% DR programs        
     
 
     %% Save the prepared data 

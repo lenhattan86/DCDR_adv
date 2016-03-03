@@ -20,7 +20,7 @@ ylim([0,max(max(yArray))*1.1]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.5]);
 print ('-depsc', [fig_path 'script_batchjob.eps']);
 
-%% Flexibility by dedrading the QoS (Delay) of interactive workload.
+%% Flexibility by degrading the QoS (Delay) of interactive workload.
 
 
 
