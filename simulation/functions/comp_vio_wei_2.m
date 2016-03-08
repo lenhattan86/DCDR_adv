@@ -1,19 +1,19 @@
-function [W, loadLevels] = comp_vio_wei(pwr_case, pv_cap, irrad_time,...
-    pct_load, dc_cap, POWER_UNIT, ...    
+function [W, loadLevels] = comp_vio_wei_2(pwr_case, pv_cap, irrad_time,...
+    pct_load, up_cap, low_cap, POWER_UNIT, ...    
     options, dcBus, numBuses, pvBus, verbose)
 
     % Scale the power consumption of data center corresponding to the
     % PV generation.       
     T = length(irrad_time);       
           
-    numLoads = floor(dc_cap/mean(POWER_UNIT));
+    numLoads = floor(up_cap/mean(POWER_UNIT)) + floor(low_cap/mean(POWER_UNIT));
    
     upperBound = POWER_UNIT*numLoads;
-    lowerBound = 0;
+    lowerBound = low_cap;
     
     loadIntervals = 0:1:numLoads;
     selectedLoadsForDC = ((upperBound - lowerBound)/numLoads).*loadIntervals + lowerBound;
-    loadLevels = repmat(selectedLoadsForDC',1,T);
+    loadLevels =  repmat(selectedLoadsForDC',1,T);
 
     W = zeros(numLoads, T);
     for i = 1:T

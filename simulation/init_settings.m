@@ -13,9 +13,10 @@ RESULT_PATH = 'results/';
 TRACE_PATH = 'traces/';
 
 IS_GENERATE_DATA = 1;
+verbose = false;
 if IS_GENERATE_DATA
     %% common constants
-    sampling_interval = 5; % minutes.
+    sampling_interval = 1; % minutes.
     time_interval = 5; % in minutes
     HOUR = 60/sampling_interval; % number of timeslots an hour.
     DAY = 24*HOUR; % number of timeslots a day.
@@ -35,6 +36,19 @@ if IS_GENERATE_DATA
     %dc_power = zeros(T,1);
     
     POWER_UNIT =  dc_cap/40;
+    %% UPS
+    battery_types = {'LA','LI','UC','FW','CAES'};
+    ups_cap     = 0.25*HOUR*dc_cap;
+    charge_rate = [10 5 1 1 4];
+    r_charge    = 0.01*ones(1, length(charge_rate))*dc_cap;
+    r_discharge = charge_rate.*r_charge;
+    DoD         = [0.8 0.8 1 1 1];
+%     DoD         = [1 1 1 1 1];
+    eff_coff    = [0.75 0.85 0.95 0.95 0.68];
+%     eff_coff = [1 1 1 1 1];
+    ramp_time   = [0.001 0.001 0.001 0.001 600]/(sampling_interval*60);
+    
+    
     %% workload
     % generate data center demand traces
     interactive_raw = load('traces/SAPnew/sapTrace.tab');
@@ -43,8 +57,7 @@ if IS_GENERATE_DATA
     t_raw = linspace(0,T,T/time_interval+1);
     t = linspace(0,T,T+1);
     inter_tmp = interp1q(t_raw',interactive_raw(1:T*sampling_interval/time_interval+1,4),t');
-    a = inter_tmp(1:T); % interactive workload
-    
+    a = inter_tmp(1:T); % interactive workload   
     
     au = 0.4; % average utilization of a workloads
     con = 0.9; % maximum utilization after consolidation
@@ -61,8 +74,7 @@ if IS_GENERATE_DATA
     dc_power = a + sum(b_flat,1)';
     dc_scale = peak_to_cap_ratio*dc_cap/max(dc_power);
     a = a *dc_scale;
-    BS = BS * dc_scale;   
-    
+    BS = BS * dc_scale;    
     
     BS = round(BS/POWER_UNIT)*POWER_UNIT;
     b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;

@@ -1,10 +1,9 @@
 function [violationFreq] = nonviolation_cooling(pwr_case, pv_cap, irrad_time,...
     pct_load, workload_power, dc_cap, ...
-    pue, t_Range, t_OA, gamma, ...
+    t_Range, t_OA, alpha, gamma, temp_power_oac, temp_power_wc,  ...
     options, dcBus, numBuses, pvBus, verbose)
 
-    numLoads = 20;
-    
+    numLoads = 20;   
 
     out_bounds = 0;
     tsteps = length(irrad_time);
@@ -23,9 +22,16 @@ function [violationFreq] = nonviolation_cooling(pwr_case, pv_cap, irrad_time,...
         temp_case.bus(pvBus,3) = temp_case.bus(pvBus,3) - pv_pwr;
 
         % Bounds of DC
-        upperBound = workload_power(i) + gamma/(t_Range(1)-t_OA(i))*workload_power(i)^3;
-        lowerBound = workload_power(i) + gamma/(t_Range(2)-t_OA(i))*workload_power(i)^3;;
-
+        lowerBound = workload_power(i) ...
+            + alpha/((t_Range(1)-t_OA(i))^temp_power_oac)*workload_power(i)^3 ...
+            + gamma/(t_Range(1)^temp_power_wc)*workload_power(i);
+        PUE_low = lowerBound/workload_power(i);
+        
+        upperBound = workload_power(i) ...
+            + alpha/((t_Range(2)-t_OA(i))^temp_power_oac) * workload_power(i)^3 ...
+            + gamma/(t_Range(2)^temp_power_wc) * workload_power(i);
+        PUE_up = upperBound/workload_power(i);        
+       
         maxVoltage = temp_case.bus(1,12);
         minVoltage = temp_case.bus(1,13);
 
