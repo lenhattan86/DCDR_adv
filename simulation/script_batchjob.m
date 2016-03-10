@@ -34,14 +34,14 @@ for b = 1:length(dcBus)
     % step 1: compute weights of violation frequency
     % Prepare the matrix of violation frequencies for the given power consumption level of data center
     if IS_LOAD
-        load('results/script_batchjob_data');
+        load('results/violation_frequency_matrix');
     else
         [W, loadLevels] =  comp_vio_wei(power_case, PVcapacity,...
                     pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                     dc_cap,...
                     POWER_UNIT, ...  
                     opt, dcBus(b), numBuses, pvBus, false);
-       
+        save('results/violation_frequency_matrix', 'W', 'loadLevels');
     end
     % step 2: Optimize the violation frequency via scheduling the workload      
     for c = 1:length(bjEnd)

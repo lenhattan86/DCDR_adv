@@ -4,7 +4,6 @@ function [violationFreq] = nonviolation_cooling(pwr_case, pv_cap, irrad_time,...
     options, dcBus, numBuses, pvBus, verbose)
 
     numLoads = 20;   
-
     out_bounds = 0;
     tsteps = length(irrad_time);
 %     dc_power = dc_power/mean(dc_power)*mean(irrad_time/1000*pv_cap)*dc_ratio;

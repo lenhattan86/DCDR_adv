@@ -17,7 +17,7 @@ function [violationFreq X] = opt_vio_freq_ups(W, loadLevels, ...
             sum(loadLevels.*X,1)' == dc_power + R_e(1:T) - D_e(1:T);
             E >= (1-DoD)*ups_cap;
             E <= ups_cap;
-            E(1)  ==  ups_cap + eff_coff*R_e(1) - D_e(1);
+            E(1)  ==  ups_cap/2 + eff_coff*R_e(1) - D_e(1);
             E(2:T) == eff_coff*R_e(2:T) - D_e(2:T) + E(1:T-1);
             D_e(2:T)- D_e(1:T-1) <= ups_cap*r_discharge/ramp_time;  
             E(2:T)  - E(1:T-1) <= ups_cap  * r_charge;

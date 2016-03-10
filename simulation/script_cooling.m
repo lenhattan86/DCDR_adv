@@ -7,7 +7,7 @@
 %TODO: The code may not co-locate the batch jobs.
 
 init_settings
-IS_LOAD = false;
+% IS_LOAD_VIOLATION_MATRIX = true;
 %% Simulation
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of pf
@@ -19,7 +19,6 @@ t_RA_avg = 70;
 % compute power cooling acceptable power range
 % P_cooling = gamma/(tRA - tOA)*a.^3;
 a_avg = mean(a);
-workload_power = dc_power./PUE;
 P_cooling = (mean(PUE)-1) * a_avg;
 cooling_ratio = 0.5;
 P_oac = cooling_ratio*P_cooling;
@@ -30,6 +29,8 @@ temp_power_wc = 1.1;
 alpha = P_oac*((t_RA_avg - mean(t_OA))^temp_power_oac)/(a_avg^3); % P_oac = alpha/((t_RA - t_OA)^temp_power) * d^3
 % water chiller
 gamma = P_wc *(t_RA_avg^temp_power_wc)/(a_avg); % P_wc  = gamma/(t_RA^temp_power) * d
+beta = 1/10;
+cm = 100;
 
 %% Grid settings
 power_case = case47custom;
@@ -41,21 +42,28 @@ violationFreq = zeros(length(dcBus), length(t_differences));
 %% Run simulation
 POWER_UNIT =  dc_cap/100;
 for b = 1:length(dcBus)
-    disp('---------------------------------------------------')    
-    for c = 1:length(t_differences)
-        irrad_time = Feb26Irrad(1:sampling_interval:T*sampling_interval);
-        t_Range    = [t_RA_avg - t_differences t_RA_avg + t_differences];
-        pct_load   = minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval);
+    disp('---------------------------------------------------')  
+    %% step 1: estimate the utility function (e.g. violation frequency)
+    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+    if IS_LOAD_VIOLATION_MATRIX
+        load('results/violation_frequency_matrix');
+    else
+        [W, loadLevels] =  comp_vio_wei(power_case, PVcapacity,...
+                    pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
+                    dc_cap,...
+                    POWER_UNIT, ...  
+                    opt, dcBus(b), numBuses, pvBus, false);
+        save('results/violation_frequency_matrix', 'W', 'loadLevels');
+    end
+    
+    for c = 1:length(t_differences)        
+    %% Step 2: optimize the utility based in the range of acceptable temperature
+        TempRange  = [t_RA_avg - t_differences t_RA_avg + t_differences];        
         
-        [violationFreq(b,c)] = nonviolation_cooling(power_case, PVcapacity, irrad_time, ...
-                pct_load, workload_power, dc_cap, ...
-                t_Range , t_OA, alpha, gamma, temp_power_oac, temp_power_wc, ...
-                opt, dcBus, numBuses, pvBus, verbose);
-            
-        
+        [ violationFreq(b,c), PUEs] = opt_vio_freq_cooling(W, loadLevels, P_IT, alpha, gamma, beta,...
+                TempRange, cm);        
     end
 end
 violationFreq
 %%
-% plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
 save('results/script_cooling.mat');
