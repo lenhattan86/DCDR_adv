@@ -9,55 +9,49 @@
 
 init_settings
 IS_LOAD = false;
+IS_SAVE = false;
 %% Simulation
 
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of pf
 % analysis
 
-%% workload configuration
-
-
 %% Grid settings
-power_case = case47custom;
-numBuses = 47;
-dcBus = 2; % dc bus location
-pvBus = 45; % bus location of PV
 
 violationFreq = zeros(length(dcBus), length(ramp_time));
-
+violationFreq_upperbound = zeros(1, length(dcBus));
+X_e_array = zeros(length(dcBus), length(ramp_time_generator), T);
 %% Run simulation.
 
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')
     pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
-%     if 1        
-%         for c = 1:length(ramp_time)
-             %% step 1: compute weights of violation frequency
-            % Prepare the matrix of violation frequencies for the given power consumption level of data center
-
-            [W, loadLevels] =  comp_vio_wei_2(power_case, PVcapacity,...
+    
+    % only DC without scheduling
+    violationFreq_upperbound(b) = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
+        minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
+        opt, dcBus(b), numBuses, pvBus, grid_load_data, loadBus, verbose);
+    
+    for c = 1:length(ramp_time)    
+        upper_bound = (r_charge(c)*ups_cap(c) + dc_power);
+        lower_bound = dc_power - r_discharge(c)*ups_cap(c);
+        [W, loadLevels] = comp_vio_wei_bounds(power_case, PVcapacity,...
                         pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
-                        r_charge(1) + dc_cap, 0 - r_discharge(1),...
-                        POWER_UNIT, ...  
-                        opt, dcBus(b), numBuses, pvBus, false);
-
-%         end
-%         save('results/ups_weight','W','loadLevels');
-%     else
-%         load('results/ups_weight');
-%     end
-    for c = 1:length(ramp_time)            
-%         W_sub = squeeze(W(c,:,:));
-%         loadLevels_sub = squeeze(loadLevels(c,:));
-        %% step 2: Optimize the violation frequency via scheduling the workload  
-        [violationFreq(b,c)] = opt_vio_freq_ups(W, loadLevels, ...
+                        lower_bound, upper_bound, numLoadLevels, ...    
+                        opt, dcBus(b), numBuses, pvBus, grid_load_data, loadBus, false);
+                        
+        dc_power = on_load_levels(dc_power, loadLevels);
+        %% step 2: Optimize the violation frequency via scheduling the workload
+        [violationFreq(b,c), X , X_e] = opt_vio_freq_ups(W, loadLevels, ...
              POWER_UNIT, dc_power, ups_cap(c), r_charge(c), r_discharge(c), ...
-             DoD(c), eff_coff(c), ramp_time(c),...
-             true);
+             DoD(c), eff_coff(c), ramp_time(c), N_cycles_per_T(c), ...
+             false);
+         X_e_array(b, c, :) = X_e;
     end
 end
 violationFreq
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
-save('results/script_ups.mat');
+if IS_SAVE
+    save('results/script_ups.mat');
+end

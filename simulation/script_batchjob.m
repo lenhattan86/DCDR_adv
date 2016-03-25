@@ -57,7 +57,7 @@ for b = 1:length(dcBus)
             end    
         end        
         [violationFreq(b,c)] = opt_vio_freq_batchjob(W, loadLevels, ...
-            dc_power, a, BS, A_bj, POWER_UNIT, true);
+            dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, true);
     end
 end
 violationFreq

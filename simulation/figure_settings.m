@@ -1,5 +1,8 @@
 close all; clear all; clc;
 
+% is_printed = true;
+is_printed = false;
+
 strBJDeandline = 'Batch job deadlines (hours)';
 strDataCenter = 'Data center';
 strViolationFreq = 'Violation frequency';

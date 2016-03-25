@@ -1,20 +1,7 @@
 %% This script is to evaluate the impact of flexiblity of backup generators' performance on the grid.
-%mahdin march 3, 2016
-
-%??????
-%what are the things to modify?
-%where is T defined? num of samples from Feb26Irrad?
-%where is BN defined?
-%??????
-
-% The idea is, we can reduce the power consumption (from the grid) of a data center by
-% making it more dependent on its own generator power
-
-% Description: Given flexibility of rampup time of backup generator, how
-% the performance of the data center varies (in terms of the voltage violation frequency)
-
 init_settings
 IS_LOAD = false;
+IS_SAVE = true;
 %% Simulation
 
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
@@ -22,52 +9,39 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % analysis
 
 %% power consumption
-bjEnd = [0:2:12]*HOUR;
-
-%% Grid settings
-power_case = case47custom;
-numBuses = 47;
-dcBus = 2; % dc bus location
-pvBus = 45; % bus location of PV
-
-violationFreq = zeros(length(dcBus), length(bjEnd));
-
+violationFreq = zeros(length(dcBus), length(ramp_time_generator));
+violationFreq_upperbound = zeros(1, length(dcBus));
+G_array = zeros(length(dcBus), length(ramp_time_generator), T);
 %% Run simulation.
-
+% dc_power =  dc_power * 2; % hard code here? need to get rid of this line.
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')
     pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
-    % step 1: compute weights of violation frequency
-    % Prepare the matrix of violation frequencies for the given power consumption level of data center
-    if IS_LOAD
-        load('results/script_batchjob_data');
-    else
-        [W, loadLevels] =  comp_vio_wei(power_case, PVcapacity,...
+    % only DC without scheduling
+    violationFreq_upperbound(b) = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
+        minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
+        opt, dcBus(b), numBuses, pvBus, grid_load_data,loadBus, verbose);
+    
+    %% step 1: compute weight matrix
+    upper_bound = dc_power;
+    lower_bound = dc_power - gen_power_cap(1);
+    [W, loadLevels] =  comp_vio_wei_bounds(power_case, PVcapacity,...
                     pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
-                    dc_cap,...
-                    POWER_UNIT, ...  
-                    opt, dcBus(b), numBuses, pvBus, false);
-                     
-       
-    end
-    % step 2: Optimize the violation frequency via scheduling the workload      
-    for c = 1:length(bjEnd)
-        % create the matrix of arrival and deadline times.
-        A_bj = zeros(BN*T,T);
-        E = S + ceil(random('Uniform',bjEnd(c),bjEnd(c)));
-        for i = 1:1:BN*T
-            if E(i) > T
-                A_bj(i,S(i):T)    = ones(1,T-S(i)+1);
-                A_bj(i,1:E(i)-T)  = ones(1,E(i)-T);
-            else
-                A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
-            end    
-        end        
-        [violationFreq(b,c)] = opt_vio_freq_batchjob(W, loadLevels, ...
-            dc_power, a, BS, A_bj, POWER_UNIT, true);
+                    lower_bound, upper_bound, numLoadLevels, ...    
+                    opt, dcBus(b), numBuses, pvBus, grid_load_data,loadBus, false);
+    
+    for c = 1:length(ramp_time_generator)
+        %% step 2: Optimize the violation frequency via scheduling the workload  
+        [violationFreq(b,c), X, G] = opt_vio_freq_gen(W, loadLevels, ...
+             dc_power, gen_power_cap(c), ramp_time_generator(c), ...
+             false);
+        G_array(b, c, :) = G;
     end
 end
-violationFreq
+
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
-save('results/script_batchjob.mat');
+if IS_SAVE
+    save('results/script_generator.mat');
+end
+violationFreq
