@@ -26,7 +26,6 @@ function [violationFreq X] = ...
             sum(X,1)==ones(1,T); % load selection constraint.
             sum(sum(loadLevels.*X)) == sum(dc_power);
             b >= 0;
-%             sum(A_bj.*b, 1) + a' <= dc_pwr_cap;
             sum(A_bj.*b, 1) + a' == sum(loadLevels.*X,1);
             sum(b,2) == BS;
             sum(A_bj.*b,2) == BS;

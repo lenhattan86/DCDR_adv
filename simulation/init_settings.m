@@ -24,18 +24,20 @@ if IS_GENERATE_DATA
     DAY = 24*HOUR; % number of timeslots a day.
     T = 1*DAY; %1440; % per minute data
     
-    numLoadLevels = 250;
+    numLoadLevels = 50;
     
     peak_to_cap_ratio = 0.7;
     %% Grid settings
     power_case = case47custom;
+%     power_case = case57;
     numBuses = size(power_case.bus,1);
     
     % grid
     dcBus = 2; % dc bus location
-    pvBus = 45; % bus location of PV
-%     loadBus = 3;
-    loadBus = 1:numBuses;
+    pvBus = 2; % bus location of PV
+%     loadBus = 0;
+    loadBus = 2;
+%     loadBus = 1:numBuses;
     
     %% PV generation
     load([TRACE_PATH 'testdayirrad.mat']);
@@ -45,7 +47,7 @@ if IS_GENERATE_DATA
     %% load demand in the electricity grid.
     IS_GRID_LOAD = true;
     
-    load_mean = 20; % MW
+    load_mean = 15; % MW
     
     [Hour_End,COAST,EAST,FAR_WEST,NORTH,NORTH_C,SOUTHERN,SOUTH_C,WEST,ERCOT] ...
         = import_grid_load('traces/ecort_load_2016.xls');    
@@ -82,7 +84,7 @@ if IS_GENERATE_DATA
     dc_ratio = 1;
     %P_IT = zeros(T,1);
     
-    POWER_UNIT =  dc_cap/40;
+    POWER_UNIT =  dc_cap/numLoadLevels;
     %% UPS
     battery_types   = {'LA','LI','UC','FW','CAES'};
     ups_capacity_investment = 2000; % k$
@@ -108,8 +110,6 @@ if IS_GENERATE_DATA
     float_life  = [4 8 12 12 12]; % years
     N_cycles_per_T = life_cycle./(float_life*365); % number of discharges per day
     
-    
-    
     %% Generators
     generator_type       = {'Oil/Steam', 'Oil/CT', 'Coal/Steam', 'Nuclear', 'Gas CT'};
     ramp_time_generator  = [33 6.7 50 20 10.2]/sampling_interval; % minutes --> time slots
@@ -134,7 +134,6 @@ if IS_GENERATE_DATA
     
     au = 0.4; % average utilization of a workloads
     con = 0.9; % maximum utilization after consolidation
-
     
     BN = 10; % average number of jobs per time slot.
     BM = 0.5; % power ratio of batch jobs vs. interactive workload.
@@ -150,9 +149,12 @@ if IS_GENERATE_DATA
     BS = BS * dc_scale;  
     b_flat= BS./sum(A_bj,2)*ones(1,T).*A_bj;
     
+    raw_dc_power = a+ sum(b_flat,1)';
+    
     BS_plus = repmat(PUE, BN,1) .* BS;
     BS_plus = round(BS_plus/POWER_UNIT)*POWER_UNIT;
     b_flat_plus = BS_plus./sum(A_bj,2)*ones(1,T).*A_bj;
+   
     
     a_plus = PUE.*a;
     a_plus = round(a_plus/POWER_UNIT)*POWER_UNIT;
@@ -202,8 +204,7 @@ if IS_GENERATE_DATA
     
     p_RTP = ones(1,T);    
     
-    % Emergency based DR %%%%%%%%%%
-    
+    % Emergency based DR %%%%%%%%%%    
 
     %% Save the prepared data 
     save([RESULT_PATH 'init_settings.mat']) 

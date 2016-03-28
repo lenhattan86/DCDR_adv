@@ -24,8 +24,16 @@ function [W, loadLevels] = comp_vio_wei(pwr_case, pv_cap, irrad_time,...
         pv_pwr = pct_flux*pv_cap; 
         
         % set up the grid load on a bus
-        if loadBus > 0
-            temp_case.bus(loadBus,3) = temp_case.bus(loadBus,3) + grid_load_data(i);
+        % set up the grid load on a bus
+        if isscalar(loadBus)
+            if loadBus > 0
+                temp_case.bus(loadBus,3) = temp_case.bus(loadBus,3) + grid_load_data(i);
+            end
+        else
+            numLoadBuses = length(loadBus);
+            for b=1:numLoadBuses
+                temp_case.bus(b,3) = temp_case.bus(b,3) + grid_load_data(b,i);
+            end
         end
 
         % Set up PV and DC bus loads

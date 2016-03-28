@@ -40,7 +40,7 @@ for b = 1:length(dcBus)
                     pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                     dc_cap,...
                     POWER_UNIT, ...  
-                    opt, dcBus(b), numBuses, pvBus, false);
+                    opt, dcBus(b), numBuses, pvBus, grid_load_data,loadBus, false);
         save('results/violation_frequency_matrix', 'W', 'loadLevels');
     end
     % step 2: Optimize the violation frequency via scheduling the workload      
@@ -56,11 +56,13 @@ for b = 1:length(dcBus)
                 A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
             end    
         end        
-        [violationFreq(b,c)] = opt_vio_freq_batchjob(W, loadLevels, ...
+        [violationFreq(b,c) X] = opt_vio_freq_batchjob(W, loadLevels, ...
             dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, true);
     end
 end
 violationFreq
+
+% compute the switching costs.
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
 save('results/script_batchjob.mat');

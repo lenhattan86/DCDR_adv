@@ -17,9 +17,18 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 QoS_delay    = 1;
 service_rate = 1/QoS_delay + a;
 
+server_power = 300e-6; %300 W = 300e-6 MW
+M = a/server_power; % number of servers.
+util_level = 0.3; 
+lamda = M*util_level;
+mu = 1;
+%util_level = arrival_rate/M;
+QoS_delay = ones(T,1)./(mu-util_level);
+% a = M*server_power
+
 %% workload configuration
  % INPUT:
-QoS_delay_relax = [0.1:0.1:0.5];
+QoS_delay_relax = [0.0:0.05:0.25];
 
 %%
 % aFlexiblitiesUpperBound & aFlexiblitiesLowerBound
@@ -31,33 +40,33 @@ for qos = 1:qos_length
     QoS_delay_slow_down = (1 + QoS_delay_relax(qos)) * QoS_delay;
     QoS_delay_speed_up  = (1 - QoS_delay_relax(qos)) * QoS_delay;
     
-    aFlexiblitiesUpperBound(qos,:) = service_rate - QoS_delay_slow_down;
-    aFlexiblitiesLowerBound(qos,:) = service_rate - QoS_delay_speed_up;
+%     aFlexiblitiesUpperBound(qos,:) = service_rate - QoS_delay_slow_down;
+%     aFlexiblitiesLowerBound(qos,:) = service_rate - QoS_delay_speed_up;
+    aFlexiblitiesUpperBound(qos,:) = server_power*lamda./(mu - ones(T,1)./QoS_delay_speed_up);
+    aFlexiblitiesLowerBound(qos,:) = server_power*lamda./(mu - ones(T,1)./QoS_delay_slow_down);
 end
 
 %% Grid settings
-power_case = case47custom;
-numBuses = 47;
-dc_cap = 20;
-dcBus = 2; % dc bus location
-pvBus = 45; % bus location of PV
 
 violationFreq = zeros(length(dcBus), qos_length);
 
+numLoadLevels = 50;
+a_qos= zeros(qos_length,T);
+dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
 for b = 1:length(dcBus)    
-    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
-    
+    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);    
     for qos = 1:qos_length
         %TODO: step 2: convert interactive_QoS_delay to aFlexiblities
-        violationFreq(b,qos) = nonviolationInteractive(power_case, PVcapacity, pvIrradi,...
-            minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval),...
+        [violationFreq(b,qos), a_qos(qos,:), dc_power_qos(qos,:)] = nonviolationInteractive(power_case, PVcapacity, pvIrradi, ...
+            minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
             dc_power, a, dc_cap, ...
             aFlexiblitiesUpperBound(qos,:), aFlexiblitiesLowerBound(qos,:), ...
-            opt, dcBus, numBuses, pvBus, verbose);
+            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, numLoadLevels, verbose);        
     end
 end
-% violationFreq
+violationFreq
+save([RESULT_PATH 'script_interactive.mat']);
 %%
 plot(QoS_delay_relax(:), violationFreq(1,:), '-ok', 'LineWidth', 4);
 % plot(x,[optimalBus,optimalBus], '--r', 'LineWidth', 4);
@@ -73,4 +82,12 @@ set(h_legend,'FontSize', 14);
 
 ylim([0, 0.4])
 
-save([RESULT_PATH 'script_interactive.mat']);
+%% 
+figure;
+plot(dc_power);
+hold on;
+plot(a);
+for q=1:qos_length
+    hold on;
+    plot(a_qos(q,:));
+end
