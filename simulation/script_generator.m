@@ -16,7 +16,7 @@ G_array = zeros(length(dcBus), length(ramp_time_generator), T);
 % dc_power =  dc_power * 2; % hard code here? need to get rid of this line.
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')
-    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+    pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
     % only DC without scheduling
     violationFreq_upperbound(b) = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
         minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...

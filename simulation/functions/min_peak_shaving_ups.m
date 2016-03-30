@@ -1,9 +1,8 @@
-function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
-            POWER_UNIT, dc_power, ups_cap, r_charge, r_discharge, DoD, eff_coff , ramp_time, N_cycles_per_T,...
-             isPlot)
+function [dc_power_after, energy_storage_power] = min_peak_shaving_ups(dc_power, ...
+         ups_cap, r_charge, r_discharge, ...
+         DoD, eff_coff, ramp_time, N_cycles_per_T)
     
-    T  = size(W,2);
-    L  = size(W,1);
+    T  = length(dc_power);
     life_cycle_rate = 1;
     P_D_e = life_cycle_rate*N_cycles_per_T * DoD *ups_cap;
     %% Optimzie the violation frequency      
@@ -12,12 +11,13 @@ function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
     X_e_lower_bound = - ups_cap* r_discharge;
     discharge_speed_bound = ups_cap* r_discharge/ramp_time;
     cvx_begin 
-        variable X(L,T) binary;
-        variables E(T) X_e(T); % X_e = R_e - D_e
-        minimize( sum(sum(W.*X)) );
+        variables E(T) X_e(T); 
+        variable dc_power_after(T);
+        variable peak_power;
+        minimize( peak_power);
         subject to
-            sum(X,1)==ones(1,T); % load selection constraint.
-            sum(loadLevels.*X,1)' == dc_power + X_e;
+            peak_power >= dc_power_after;
+            dc_power_after == dc_power + X_e;
             X_e  <= ups_cap  * r_charge;
             X_e  >= X_e_lower_bound;
             if discharge_speed_bound < -X_e_lower_bound
@@ -32,21 +32,9 @@ function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
     cvx_end
      
     if ~strcmp(cvx_status,'Solved');
-        cvx_status
-        disp('Suggestion: life-time constraint is violated');
+        cvx_status        
         error('cannot solve CVX problem');
     end
     
-    %% return results    
-    violationFreq = sum(sum(W.*X));
-    R_e = pos(X_e);
-    D_e = pos(-X_e);
-    if isPlot
-        figure
-%         stairs(1:T, R_e);
-%         hold on;
-%         stairs(1:T, D_e);
-        stairs(1:T, X_e);
-%         legend('Discharge','Charge');
-    end
+    energy_storage_power =  X_e;
 end

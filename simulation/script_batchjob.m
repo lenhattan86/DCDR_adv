@@ -7,7 +7,8 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings
+% init_settings
+init_settings_shaving
 IS_LOAD = false;
 %% Simulation
 
@@ -16,7 +17,7 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % analysis
 
 %% workload configuration
-bjEnd = [0:2:12]*HOUR;
+bjEnd = [2:2:12]*HOUR;
 
 %% Grid settings
 power_case = case47custom;
@@ -30,7 +31,7 @@ violationFreq = zeros(length(dcBus), length(bjEnd));
 
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')
-    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+    pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
     % step 1: compute weights of violation frequency
     % Prepare the matrix of violation frequencies for the given power consumption level of data center
     if IS_LOAD
@@ -45,6 +46,7 @@ for b = 1:length(dcBus)
     end
     % step 2: Optimize the violation frequency via scheduling the workload      
     for c = 1:length(bjEnd)
+        c
         % create the matrix of arrival and deadline times.
         A_bj = zeros(BN*T,T);
         E = S + ceil(random('Uniform',bjEnd(c),bjEnd(c)));
@@ -56,7 +58,7 @@ for b = 1:length(dcBus)
                 A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
             end    
         end        
-        [violationFreq(b,c) X] = opt_vio_freq_batchjob(W, loadLevels, ...
+        [violationFreq(b,c), X, load_prof] = opt_vio_freq_batchjob(W, loadLevels, ...
             dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, true);
     end
 end

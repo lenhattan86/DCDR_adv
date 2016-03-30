@@ -1,4 +1,4 @@
-function [violationFreq X] = ...
+function [violationFreq, X, load_prof] = ...
     opt_vio_freq_batchjob(W, loadLevels, dc_power, a, BS, A_bj, POWER_UNIT, isPlot)
     
 %     SCALE = 1;
@@ -12,7 +12,7 @@ function [violationFreq X] = ...
     % PV generation.    
     T  = length(dc_power);
     L = size(W,1);
-    BN = size(BS,1); % total number of batch jobs.
+    total_BN = size(BS,1); % total number of batch jobs.
     dc_pwr_cap = max(loadLevels);
     epsilon = POWER_UNIT; % acceptable errors
     
@@ -20,7 +20,7 @@ function [violationFreq X] = ...
     %% Optimzie the violation frequency            
     cvx_begin 
         variable X(L,T) binary;
-        variable b(BN,T);
+        variable b(total_BN,T);
         minimize( sum(sum(W.*X)) );
         subject to
             sum(X,1)==ones(1,T); % load selection constraint.

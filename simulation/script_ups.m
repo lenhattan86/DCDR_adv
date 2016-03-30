@@ -25,7 +25,7 @@ X_e_array = zeros(length(dcBus), length(ramp_time_generator), T);
 
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')
-    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+    pvIrradi = irrad_time; %Feb26Irrad(1:sampling_interval:T*sampling_interval);
     
     % only DC without scheduling
     violationFreq_upperbound(b) = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...

@@ -11,7 +11,9 @@ figure_settings;
 %% PV generation
 figure_settings; load('results/script_generator.mat');  
 
-irrad_time = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+% irrad_time = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+day = 6;
+irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
 pct_flux = irrad_time/1000;
 pv_pwr = pct_flux*PVcapacity; 
 yArray = pv_pwr;
@@ -125,9 +127,11 @@ end
 
 figure;
 xArray = (1:T)/HOUR;
-plot(xArray,dc_power);
+dc_power_after = sum(loadLevels.*X)
+% bar(load_prof,'stacked'); 
+plot(xArray,dc_power_after,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
-xlabel('Hours','FontSize',fontAxis);
+% xlabel('Hours','FontSize',fontAxis);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'power_batchjobs.eps']);
@@ -230,6 +234,21 @@ if is_printed
     print ('-depsc', [fig_path 'script_ups_power.eps']);
 end
 
+figure;
+xArray = (1:T)/HOUR;
+yArray = squeeze(X_e_array(1,:,:));
+plot(xArray,yArray,'LineWidth', 1);
+ylabel('Power (MW)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+% set(gca,'xticklabel',battery_types,'FontSize',fontAxis);
+% legendStr = {strDataCenter};
+legend(battery_types,'Location','southeast','FontSize',fontLegend);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+% legend({'charge','discharge'},'Location','northwest','FontSize',fontLegend);
+if is_printed
+    print ('-depsc', [fig_path 'script_ups_power_profile.eps']);
+end
+
 %% generator types
 figure_settings;
 fontAxis = 10;
@@ -252,11 +271,13 @@ figure;
 temp = squeeze(G_array(1,:,:));
 yArray = sum(temp,2)/HOUR;
 xArray = 1:length(yArray);
-bar(xArray, yArray, 0.2);
-ylabel('Power generation (MWh)','FontSize',fontAxis);
-xlabel('Generator types','FontSize',fontAxis);
-set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
-ylim([0,max(max(yArray))*1.1]);
+% bar(xArray, yArray, 0.2);
+plot(temp');
+ylabel('Power generation (MW)','FontSize',fontAxis);
+% xlabel('Generator types','FontSize',fontAxis);
+% set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
+legend(generator_type,'Location','southeast','FontSize',fontLegend);
+ylim([0,dc_cap]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'script_generator_power.eps']);
@@ -294,4 +315,87 @@ set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'gen_emissions.eps']);
+end
+
+%% Peak-shaving %%%%%%%%%%%%
+%% batch job
+figure_settings; load('results/peak_shaving_batch_jobs.mat');  
+
+yArray = dc_power_after';
+xArray = (1:T)/HOUR;
+figure;
+plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
+hold on;
+plot(xArray,yArray,'LineWidth', lineWitdth);
+ylabel('Power (MW)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+legendStr = {'original','0.5 hour','1 hour', '1.5 hours', '2 hours'};
+legend(legendStr,'Location','southeast','FontSize',fontLegend);
+% ylim([0,max(max(yArray))*1.3]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_batch_jobs.eps']);
+end
+%% cooling
+%% batch job
+figure_settings; load('results/peak_shaving_cooling.mat');  
+
+yArray = dc_power_after';
+xArray = (1:T)/HOUR;
+figure;
+% plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
+% hold on;
+plot(xArray,yArray,'LineWidth', lineWitdth);
+ylabel('Power (MW)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+% legendStr = {'original','0.5 hour','1 hour', '1.5 hours', '2 hours'};
+% legend(legendStr,'Location','southeast','FontSize',fontLegend);
+% ylim([0,max(max(yArray))*1.3]);
+ylim([0,dc_cap]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_cooling.eps']);
+end
+
+%% energy storages
+figure_settings; load('results/peak_shaving_ups.mat');  
+
+yArray = dc_power_after';
+xArray = (1:T)/HOUR;
+figure;
+% plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
+% hold on;
+plot(xArray,yArray,'LineWidth', lineWitdth);
+ylabel('Power (MW)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+% legendStr = {battery_types};
+legend(battery_types,'Location','southeast','FontSize',fontLegend);
+% ylim([0,max(max(yArray))*1.3]);
+ylim([0,dc_cap]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_ups.eps']);
+end
+
+%% Back-up generators
+figure_settings; load('results/peak_shaving_generator.mat');  
+
+yArray = dc_power_after';
+xArray = (1:T)/HOUR;
+figure;
+% plot(xArray,dc_power,'LineWidth', lineWitdth);
+% hold on;
+plot(xArray,yArray,'LineWidth', lineWitdth);
+ylabel('Power (MW)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+% legendStr = {battery_types};
+legend(generator_type,'Location','northeast','FontSize',fontLegend);
+ylim([0,dc_cap]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_generator.eps']);
 end

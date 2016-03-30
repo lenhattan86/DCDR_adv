@@ -31,9 +31,9 @@ temp_power_wc = 1.1;
 alpha = P_oac*((t_RA_avg - mean(t_OA))^temp_power_oac)/(a_avg^3); % P_oac = alpha/((t_RA - t_OA)^temp_power) * d^3
 % water chiller
 %gamma = P_wc *(t_RA_avg^temp_power_wc)/(a_avg); % P_wc  = gamma/(t_RA^temp_power) * d
-gamma = 0.2;
+gamma = 0.3;
 beta = 1;
-cm = 0.2;
+cm = 20;
 
 lower_bound = P_IT;
 upper_bound = min(2*P_IT,dc_real_cap);
@@ -47,18 +47,17 @@ violationFreq = zeros(length(dcBus), length(t_differences));
 
 
 %% Run simulation
-POWER_UNIT =  dc_cap/100;
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')  
     %% step 1: estimate the utility function (e.g. violation frequency)
-    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
+    pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
     if IS_LOAD_VIOLATION_MATRIX
         load('results/matrix_script_cooling');
     else
         [W, loadLevels] =  comp_vio_wei_bounds(power_case, PVcapacity,...
                     pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                     lower_bound, upper_bound, numLoadLevels, ...  ...                    
-                    opt, dcBus(b), numBuses, pvBus, false);
+                    opt, dcBus(b), numBuses, pvBus, grid_load_data, loadBus,  false);
         save('results/matrix_script_cooling', 'W', 'loadLevels');
     end
     

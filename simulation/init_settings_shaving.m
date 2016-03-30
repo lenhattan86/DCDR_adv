@@ -18,7 +18,7 @@ IS_LOAD_VIOLATION_MATRIX = false;
 verbose = false;
 if IS_GENERATE_DATA
     %% common constants
-    sampling_interval = 1; % minutes.
+    sampling_interval = 15; % minutes.
     time_interval = 5; % in minutes
     HOUR = 60/sampling_interval; % number of timeslots an hour.
     DAY = 24*HOUR; % number of timeslots a day.
@@ -43,8 +43,6 @@ if IS_GENERATE_DATA
     load([TRACE_PATH 'testdayirrad.mat']);
     PVcapacity = 30;
 %     PVcapacity = 0;
-    day = 6;
-    irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
 
     %% load demand in the electricity grid.
     IS_GRID_LOAD = true;
@@ -207,9 +205,13 @@ if IS_GENERATE_DATA
     p_RTP = ones(1,T);    
     
     % Emergency based DR %%%%%%%%%%    
+    
+    %% Peak-shaving
+    p_peak = 12; % cents kWh
+    p_base = 8;  % cents/ kWh
 
     %% Save the prepared data 
-    save([RESULT_PATH 'init_settings.mat']) 
+    save([RESULT_PATH 'init_settings_shaving.mat']) 
 else
-    load([RESULT_PATH 'init_settings.mat']);
+    load([RESULT_PATH 'init_settings_shaving.mat']);
 end

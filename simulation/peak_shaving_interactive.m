@@ -55,7 +55,7 @@ a_qos= zeros(qos_length,T);
 dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
 for b = 1:length(dcBus)    
-    pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);    
+    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);    
     for qos = 1:qos_length
         %TODO: step 2: convert interactive_QoS_delay to aFlexiblities
         [violationFreq(b,qos), a_qos(qos,:), dc_power_qos(qos,:)] = nonviolationInteractive(power_case, PVcapacity, pvIrradi, ...
