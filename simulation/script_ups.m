@@ -30,7 +30,7 @@ for b = 1:len_investment
     % only DC without scheduling
     violationFreq_upperbound(b) = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
         minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
-        opt, dcBus(b), numBuses, pvBus, grid_load_data, loadBus, verbose);
+        opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, verbose);
     
     for c = 1:length(ramp_time)    
         upper_bound = (r_charge(c)*ups_cap(c) + dc_power);
@@ -38,7 +38,7 @@ for b = 1:len_investment
         [W, loadLevels] = comp_vio_wei_bounds(power_case, PVcapacity,...
                         pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                         lower_bound, upper_bound, numLoadLevels, ...    
-                        opt, dcBus(b), numBuses, pvBus, grid_load_data, loadBus, false);
+                        opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, false);
                         
         dc_power = on_load_levels(dc_power, loadLevels);
         %% step 2: Optimize the violation frequency via scheduling the workload
