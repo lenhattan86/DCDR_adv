@@ -30,7 +30,7 @@ function [violationFreq, idle_power, a_power, b_power] = ...
             b >= 0;
             if ON_OFF
 %                 idle_power = (sum(A_bj.*b, 1) + a')*IP/PP;
-                sum(A_bj.*b, 1) + a' + (sum(A_bj.*b, 1) + a')*IP/PP == sum(loadLevels.*X,1);
+                sum(A_bj.*b, 1) + a' + (sum(A_bj.*b, 1) + a')*IP/(PP-IP) == sum(loadLevels.*X,1);
             else    
                 sum(A_bj.*b, 1) + a' + IDLE_POWER == sum(loadLevels.*X,1);
             end

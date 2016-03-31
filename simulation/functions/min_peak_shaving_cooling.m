@@ -1,4 +1,4 @@
-function [dc_power, P_cooling] = min_peak_shaving_cooling(P_IT, ...
+function [dc_power, P_cooling] = min_peak_shaving_cooling(grid_load_data, P_IT, ...
             alpha, gamma, beta, TempRange, cm)
     
     Temp_low = TempRange(1);
@@ -16,7 +16,7 @@ function [dc_power, P_cooling] = min_peak_shaving_cooling(P_IT, ...
         variable dc_power(T);
         minimize peak_power;
         subject to
-            peak_power >= dc_power;
+            peak_power >= dc_power + grid_load_data;
             dc_power == P_IT + P_cooling;
             P_cooling == gamma*Q_r;
             Q_r >= 0;

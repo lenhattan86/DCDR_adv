@@ -7,7 +7,7 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings_shaving
+init_settings_15
 % init_settings
 IS_LOAD = false;
 %% Simulation
@@ -37,9 +37,10 @@ for c = 1:length(bjEnd)
             A_bj(i,1:E(i)-T)  = ones(1,E(i)-T);
         else
             A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
-        end    
+        end
     end        
-    [dc_power_after(c,:), bj_after(c,:)] = min_peak_using_batch_jobs( a, BS, A_bj, false);
+    [dc_power_after(c,:), bj_after(c,:)] = min_peak_using_batch_jobs...
+        ( grid_load_data ,a, BS, A_bj,PP, IP, false);
 %     [dc_power_after(c,:), bj_after(c,:)] = min_peak_using_batch_jobs( a_plus, BS_plus, A_bj, false);
 end
 %%
@@ -51,7 +52,9 @@ if 1
     figure;
 %     plot(raw_dc_power);
 %     hold on;
-    plot(dc_power);
-    hold on;
-    plot(dc_power_after');
+    plot(dc_power+grid_load_data);
+    for c = 1:length(bjEnd)
+        hold on;
+        plot(dc_power_after(c,:)' + grid_load_data);
+    end
 end

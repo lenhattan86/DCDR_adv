@@ -1,4 +1,4 @@
-function [dc_power_after, energy_storage_power] = min_peak_shaving_ups(dc_power, ...
+function [dc_power_after, energy_storage_power] = min_peak_shaving_ups(grid_load_data ,dc_power, ...
          ups_cap, r_charge, r_discharge, ...
          DoD, eff_coff, ramp_time, N_cycles_per_T)
     
@@ -16,7 +16,7 @@ function [dc_power_after, energy_storage_power] = min_peak_shaving_ups(dc_power,
         variable peak_power;
         minimize( peak_power);
         subject to
-            peak_power >= dc_power_after;
+            peak_power >= dc_power_after + grid_load_data;
             dc_power_after == dc_power + X_e;
             X_e  <= ups_cap  * r_charge;
             X_e  >= X_e_lower_bound;

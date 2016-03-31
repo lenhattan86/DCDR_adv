@@ -7,31 +7,23 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings
+init_settings_15
 IS_LOAD = false;
 verbose = false;
 %% Simulation
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of
 % analysis
-QoS_delay    = 1;
-service_rate = 1/QoS_delay + a;
-
-server_power = 300e-6; %300 W = 300e-6 MW
-M = a/server_power; % number of servers.
-util_level = 0.3; 
+M = a_plus/PP; % number of servers.
 lamda = M*util_level;
-mu = 1;
+
 %util_level = arrival_rate/M;
 QoS_delay = ones(T,1)./(mu-util_level);
 % a = M*server_power
-
+server_power = PP;
 %% workload configuration
  % INPUT:
 QoS_delay_relax = [0.0:0.05:0.25];
-
-%%
-% aFlexiblitiesUpperBound & aFlexiblitiesLowerBound
 qos_length              = length(QoS_delay_relax);
 aFlexiblitiesUpperBound = zeros(qos_length, length(a));
 aFlexiblitiesLowerBound = zeros(qos_length, length(a));
@@ -39,7 +31,7 @@ aFlexiblitiesLowerBound = zeros(qos_length, length(a));
 for qos = 1:qos_length
     QoS_delay_slow_down = (1 + QoS_delay_relax(qos)) * QoS_delay;
     QoS_delay_speed_up  = (1 - QoS_delay_relax(qos)) * QoS_delay;
-    
+
 %     aFlexiblitiesUpperBound(qos,:) = service_rate - QoS_delay_slow_down;
 %     aFlexiblitiesLowerBound(qos,:) = service_rate - QoS_delay_speed_up;
     aFlexiblitiesUpperBound(qos,:) = server_power*lamda./(mu - ones(T,1)./QoS_delay_speed_up);
@@ -49,45 +41,25 @@ end
 %% Grid settings
 
 violationFreq = zeros(length(dcBus), qos_length);
-
 numLoadLevels = 50;
 a_qos= zeros(qos_length,T);
 dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
-for b = 1:length(dcBus)    
-    pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);    
-    for qos = 1:qos_length
-        %TODO: step 2: convert interactive_QoS_delay to aFlexiblities
-        [violationFreq(b,qos), a_qos(qos,:), dc_power_qos(qos,:)] = nonviolationInteractive(power_case, PVcapacity, pvIrradi, ...
-            minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
-            dc_power, a, dc_cap, ...
-            aFlexiblitiesUpperBound(qos,:), aFlexiblitiesLowerBound(qos,:), ...
-            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, numLoadLevels, verbose);        
-    end
+for qos = 1:qos_length
+    [dc_power_after(qos,:), a_after(qos,:)] = min_peak_interactive...
+        ( grid_load_data, a_plus,  aFlexiblitiesLowerBound(qos,:), b_flat_plus, PP, IP);
 end
-violationFreq
-save([RESULT_PATH 'script_interactive.mat']);
 %%
-plot(QoS_delay_relax(:), violationFreq(1,:), '-ok', 'LineWidth', 4);
-% plot(x,[optimalBus,optimalBus], '--r', 'LineWidth', 4);
-% plot(x,[optimal,optimal],'-b', 'LineWidth', 2);
+% plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
+save('results/peak_shaving_interactive.mat');
 
-h_legend = legend('QoS');
-    
-x_label = xlabel('Extended delay (%)');
-y_label = ylabel('Violation Frequency');
-set(x_label, 'FontSize', 14);
-set(y_label, 'FontSize', 14);
-set(h_legend,'FontSize', 14);  
-
-ylim([0, 0.4])
-
-%% 
-figure;
-plot(dc_power);
-hold on;
-plot(a);
-for q=1:qos_length
-    hold on;
-    plot(a_qos(q,:));
+%% Plot figures
+if 1
+    figure;
+%     plot(raw_dc_power+grid_load_data);
+    plot(dc_power+grid_load_data);
+    for c = 1:qos_length
+        hold on;
+        plot(dc_power_after(c,:)' + grid_load_data);
+    end
 end

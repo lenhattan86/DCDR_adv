@@ -22,7 +22,8 @@ violationFreq = zeros(length(dcBus), length(ramp_time));
 violationFreq_upperbound = zeros(1, length(dcBus));
 X_e_array = zeros(length(dcBus), length(ramp_time_generator), T);
 %% Run simulation.
-
+count = 0;
+progressbar
 for b = 1:len_investment
     disp('---------------------------------------------------')
     pvIrradi = irrad_time; %Feb26Irrad(1:sampling_interval:T*sampling_interval);
@@ -31,8 +32,7 @@ for b = 1:len_investment
     violationFreq_upperbound(b) = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
         minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
         opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, verbose);
-    
-    for c = 1:length(ramp_time)    
+    for c = 1:length(ramp_time)  
         upper_bound = (r_charge(c)*ups_cap(c) + dc_power);
         lower_bound = dc_power - r_discharge(c)*ups_cap(c);
         [W, loadLevels] = comp_vio_wei_bounds(power_case, PVcapacity,...
@@ -47,6 +47,8 @@ for b = 1:len_investment
              DoD(c), eff_coff(c), ramp_time(c), N_cycles_per_T(c), ...
              false);
          X_e_array(b, c, :) = X_e;
+         count = count + 1;
+         progressbar(count/(len_investment*length(ramp_time)))
     end
 end
 violationFreq

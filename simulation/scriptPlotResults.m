@@ -8,14 +8,34 @@ figure_settings;
 %  	16 17 18 19 18; 19 20 21 22 14; 22 23 24 25 14; 25 26 27 28 20],'test plot', ...
 %  	[[0:3:24]' [5:3:29]'],[],{'LA' 'LI' 'UC' 'FW' 'CAES'});
 
+%% Plot the total demand & supply
+figure_settings; 
+load('results/init_settings.mat');
+% load('results/init_settings_15.mat');
+yArray = (dc_power + grid_load_data)*15;
+xArray = (1:T)/HOUR;
+figure;
+plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
+ylabel('Energy (MWh)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+legendStr = {'Load demand'};
+legend(legendStr,'Location','northeast','FontSize',fontLegend);
+ylim([0,max(max(yArray))*1.3]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'peak_demand.eps']);
+end
+
+
 %% PV generation
-figure_settings; load('results/script_generator.mat');  
+figure_settings; load('results/init_settings.mat');  
 
 % irrad_time = Feb26Irrad(1:sampling_interval:T*sampling_interval);
-day = 6;
-irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
-pct_flux = irrad_time/1000;
-pv_pwr = pct_flux*PVcapacity; 
+% day = 6;
+% irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
+% pct_flux = irrad_time/1000;
+% pv_pwr = pct_flux*PVcapacity; 
 yArray = pv_pwr;
 xArray = (1:T)/HOUR;
 figure;
@@ -342,10 +362,10 @@ end
 %% batch job
 figure_settings; load('results/peak_shaving_batch_jobs.mat');  
 
-yArray = dc_power_after';
+yArray = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
 xArray = (1:T)/HOUR;
 figure;
-plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
+plot(xArray,dc_power+grid_load_data,'LineWidth', lineWitdth);
 hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);

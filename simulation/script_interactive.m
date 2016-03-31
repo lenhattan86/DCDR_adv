@@ -17,9 +17,7 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 
 server_power = PP; % equal to peak power.
 M = a/server_power; % number of servers.
-util_level = 0.3; 
 lamda = M*util_level;
-mu = 1;
 %util_level = arrival_rate/M;
 QoS_delay = ones(T,1)./(mu-util_level);
 % a = M*server_power

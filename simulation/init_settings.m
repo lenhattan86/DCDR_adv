@@ -26,6 +26,8 @@ if IS_GENERATE_DATA
     
     numLoadLevels = 50;
     
+    MWh = sampling_interval/HOUR; % energy a sampling interval.
+    
     
     %% Grid settings
     power_case = case47custom;
@@ -45,6 +47,8 @@ if IS_GENERATE_DATA
 %     PVcapacity = 0;
     day = 6;
     irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
+    pct_flux = irrad_time/1000;
+    pv_pwr = pct_flux*PVcapacity; 
 
     %% load demand in the electricity grid.
     IS_GRID_LOAD = true;
@@ -57,7 +61,9 @@ if IS_GENERATE_DATA
     if isscalar(loadBus)
         t_raw = linspace(0,T,24);
         t = linspace(0,T,T);
-        temp = interp1q(t_raw',ERCOT(1:24),t');
+        i_day = 10;
+        temp = interp1q(t_raw',ERCOT((i_day-1)*24+1:i_day*24),t');
+%         plot(temp); ylim([0 max(temp)]);
         grid_load_data = temp*load_mean/mean(ERCOT);
     else        
         numLoadBuses = length(loadBus);
@@ -91,7 +97,7 @@ if IS_GENERATE_DATA
     IP = 40e-6; % server 's idle power in MW
     PP = 200e-6; % server peak power in MW.
     
-    ON_OFF =  false;
+    ON_OFF =  true;
     MAX_IDLE_POWER = dc_cap*IP/PP;
     
     
@@ -126,7 +132,7 @@ if IS_GENERATE_DATA
     float_life  = [4 8 12 12 12]; % years
     N_cycles_per_T = life_cycle./(float_life*365); % number of discharges per day
     
-    %% Generators
+    %% Backup Generators
     generator_type       = {'Oil/Steam', 'Oil/CT', 'Coal/Steam', 'Nuclear', 'Gas CT'};
     ramp_time_generator  = [33 6.7 50 20 10.2]/sampling_interval; % minutes --> time slots
     gen_cap              = [inf inf inf inf inf];
@@ -134,6 +140,9 @@ if IS_GENERATE_DATA
     
     emission_cap         = [inf inf inf inf inf];
     emission_rate        = [443 443 443 443 443];
+    
+    gen_budget           = 1000*[1 1 1 1 1]; % M$/MW
+    gen_price            = [10 20 25 100 8]*1e-3; % $/kWh -> $/MW
     
     % operational cost
     p_BG = 0.6;
@@ -156,8 +165,8 @@ if IS_GENERATE_DATA
     
     % generate the raw Batch jobs and a workload
     [A_bj, BS, S, E] = batch_job_generator(T,BN*T, 'Uniform',1,1, ...
-        BM/(1-BM)*sum(mean(a)./au)/con); % generate batch jobs based on statistical properties
-    % compute the weight matrix of violation frequency  
+        BM/(1-BM)*sum(mean(a)./au)/con); % generate batch jobs based on statistical properties    
+    % compute the weight matrix of violation frequency      
     b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
     P_IT = a + sum(b_flat,1)';
     dc_scale = peak_to_cap_ratio*(dc_cap-MAX_IDLE_POWER)/max(P_IT);
@@ -176,7 +185,6 @@ if IS_GENERATE_DATA
 %     BS_plus = repmat(PUEs, BN,1) .* BS;
     BS_plus = round(BS/POWER_UNIT)*POWER_UNIT;
     b_flat_plus = BS_plus./sum(A_bj,2)*ones(1,T).*A_bj;
-   
     
 %     a_plus = PUEs.*a;
     a_plus = round(a/POWER_UNIT)*POWER_UNIT;
@@ -184,6 +192,10 @@ if IS_GENERATE_DATA
     
     % switching cost
     p_SW = 0.4;
+    
+    % interactive & QoS
+    util_level = 0.3; 
+    mu = 1;
     
     %% cooling
     %  http://www.accuweather.com/en/us/new-york-ny/10007/hourly-weather-forecast/349727?hour=0
@@ -196,6 +208,25 @@ if IS_GENERATE_DATA
     
     % cooling risk cost
     p_CL = 0.3;
+    
+    t_differences = 0:2:10; % acceptable temperature.
+    t_RA_avg = 70;
+    % compute power cooling acceptable power range
+    % P_cooling = gamma/(tRA - tOA)*a.^3;
+    a_avg = mean(a);
+    P_cooling = (mean(PUE)-1) * a_avg;
+    cooling_ratio = 0.5;
+    P_oac = cooling_ratio*P_cooling;
+    P_wc = (1-cooling_ratio)* P_cooling;
+    temp_power_oac = 1.5;
+    temp_power_wc = 1.1;
+    % outside air cooler
+    alpha = P_oac*((t_RA_avg - mean(t_OA))^temp_power_oac)/(a_avg^3); % P_oac = alpha/((t_RA - t_OA)^temp_power) * d^3
+    % water chiller
+    %gamma = P_wc *(t_RA_avg^temp_power_wc)/(a_avg); % P_wc  = gamma/(t_RA^temp_power) * d
+    gamma = 0.3;
+    beta = 1;
+    cm = 2*(sampling_interval/15);
     
     %% Electricity grid
 
