@@ -14,10 +14,8 @@ verbose = false;
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of
 % analysis
-QoS_delay    = 1;
-service_rate = 1/QoS_delay + a;
 
-server_power = 300e-6; %300 W = 300e-6 MW
+server_power = PP; % equal to peak power.
 M = a/server_power; % number of servers.
 util_level = 0.3; 
 lamda = M*util_level;
@@ -35,7 +33,7 @@ QoS_delay_relax = [0.0:0.05:0.25];
 qos_length              = length(QoS_delay_relax);
 aFlexiblitiesUpperBound = zeros(qos_length, length(a));
 aFlexiblitiesLowerBound = zeros(qos_length, length(a));
-
+QoS_delay_after         = zeros(qos_length,T);
 for qos = 1:qos_length
     QoS_delay_slow_down = (1 + QoS_delay_relax(qos)) * QoS_delay;
     QoS_delay_speed_up  = (1 - QoS_delay_relax(qos)) * QoS_delay;
@@ -62,7 +60,9 @@ for b = 1:length(dcBus)
             minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
             dc_power, a, dc_cap, ...
             aFlexiblitiesUpperBound(qos,:), aFlexiblitiesLowerBound(qos,:), ...
-            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, numLoadLevels, verbose);        
+            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, numLoadLevels, verbose);  
+        m = a_qos(qos,:)/server_power;
+        QoS_delay_after(qos,:) = ones(1,T)./(mu-lamda'./m);
     end
 end
 violationFreq

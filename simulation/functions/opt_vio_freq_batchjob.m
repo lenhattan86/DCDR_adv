@@ -1,5 +1,5 @@
-function [violationFreq, X, load_prof] = ...
-    opt_vio_freq_batchjob(W, loadLevels, dc_power, a, BS, A_bj, POWER_UNIT, isPlot)
+function [violationFreq, idle_power, a_power, b_power] = ...
+    opt_vio_freq_batchjob(W, loadLevels, dc_power, a, BS, A_bj, POWER_UNIT, IDLE_POWER,IP,PP)
     
 %     SCALE = 1;
 %     loadLevels = round(loadLevels*SCALE);
@@ -16,6 +16,8 @@ function [violationFreq, X, load_prof] = ...
     dc_pwr_cap = max(loadLevels);
     epsilon = POWER_UNIT; % acceptable errors
     
+    ON_OFF = true;
+    
     
     %% Optimzie the violation frequency            
     cvx_begin 
@@ -24,9 +26,14 @@ function [violationFreq, X, load_prof] = ...
         minimize( sum(sum(W.*X)) );
         subject to
             sum(X,1)==ones(1,T); % load selection constraint.
-            sum(sum(loadLevels.*X)) == sum(dc_power);
+%             sum(sum(loadLevels.*X)) == sum(dc_power);
             b >= 0;
-            sum(A_bj.*b, 1) + a' == sum(loadLevels.*X,1);
+            if ON_OFF
+%                 idle_power = (sum(A_bj.*b, 1) + a')*IP/PP;
+                sum(A_bj.*b, 1) + a' + (sum(A_bj.*b, 1) + a')*IP/PP == sum(loadLevels.*X,1);
+            else    
+                sum(A_bj.*b, 1) + a' + IDLE_POWER == sum(loadLevels.*X,1);
+            end
             sum(b,2) == BS;
             sum(A_bj.*b,2) == BS;
     cvx_end   
@@ -37,15 +44,13 @@ function [violationFreq, X, load_prof] = ...
         cvx_status
         error('cannot solve CVX problem');
     end
-    
+    if ON_OFF
+        idle_power = (sum(A_bj.*b, 1) + a')*IP/PP;
+    else    
+       idle_power = IDLE_POWER;
+    end
     %% return results
-    
-    load_prof = [a';sum(A_bj.*b, 1)]';
-    
-    if isPlot
-        figure
-        bar(load_prof,'stacked');  
-    end    
-    
+    a_power = a;
+    b_power = sum(A_bj.*b, 1);    
     violationFreq = sum(sum(W.*X));
 end

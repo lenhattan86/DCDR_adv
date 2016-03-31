@@ -26,7 +26,7 @@ if IS_GENERATE_DATA
     
     numLoadLevels = 50;
     
-    peak_to_cap_ratio = 0.7;
+    
     %% Grid settings
     power_case = case47custom;
 %     power_case = case57;
@@ -43,6 +43,8 @@ if IS_GENERATE_DATA
     load([TRACE_PATH 'testdayirrad.mat']);
     PVcapacity = 30;
 %     PVcapacity = 0;
+    day = 6;
+    irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
 
     %% load demand in the electricity grid.
     IS_GRID_LOAD = true;
@@ -75,16 +77,25 @@ if IS_GENERATE_DATA
     end
     
     %% data center
-    PUE_orig = [1.16,1.17,1.16,1.20,1.22,1.22,1.24,1.26,1.35,1.32,1.25, ...
-        1.30,1.29,1.35,1.32,1.40,1.40,1.25,1.29,1.30,1.28,1.29,1.18,1.13]';
-    PUE = reshape((1+0.2*(rand(T/24,1)-0.5))*PUE_orig',T,1);
+%     PUE_orig = [1.16,1.17,1.16,1.20,1.22,1.22,1.24,1.26,1.35,1.32,1.25, ...
+%         1.30,1.29,1.35,1.32,1.40,1.40,1.25,1.29,1.30,1.28,1.29,1.18,1.13]';
+%     PUE = reshape((1+0.2*(rand(T/24,1)-0.5))*PUE_orig',T,1);
+    PUE = 1.3;
+    PUEs = PUE * ones(T,1);
     dc_cap = 20;
+    peak_to_cap_ratio = 0.7;
     dc_real_cap = peak_to_cap_ratio*dc_cap;
-    
     dc_ratio = 1;
     %P_IT = zeros(T,1);
     
+    IP = 40e-6; % server 's idle power in MW
+    PP = 200e-6; % server peak power in MW.
+    
+    IDLE_POWER = dc_cap*IP/PP;
+    
+    
     POWER_UNIT =  dc_cap/numLoadLevels;
+    IDLE_POWER = round(IDLE_POWER/POWER_UNIT)*POWER_UNIT;
     %% UPS
     battery_types   = {'LA','LI','UC','FW','CAES'};
     ups_capacity_investment = 2000; % k$
@@ -144,23 +155,22 @@ if IS_GENERATE_DATA
     % compute the weight matrix of violation frequency  
     b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
     P_IT = a + sum(b_flat,1)';
-    dc_scale = peak_to_cap_ratio*dc_cap/max(P_IT);
+    dc_scale = peak_to_cap_ratio*(dc_cap-IDLE_POWER)/max(P_IT);
     a = a *dc_scale;
     BS = BS * dc_scale;  
     b_flat= BS./sum(A_bj,2)*ones(1,T).*A_bj;
+    P_IT = a + sum(b_flat,1)';
     
-    raw_dc_power = a+ sum(b_flat,1)';
+    raw_dc_power = P_IT + IDLE_POWER;
     
-    BS_plus = repmat(PUE, BN,1) .* BS;
-    BS_plus = round(BS_plus/POWER_UNIT)*POWER_UNIT;
+%     BS_plus = repmat(PUEs, BN,1) .* BS;
+    BS_plus = round(BS/POWER_UNIT)*POWER_UNIT;
     b_flat_plus = BS_plus./sum(A_bj,2)*ones(1,T).*A_bj;
    
     
-    a_plus = PUE.*a;
-    a_plus = round(a_plus/POWER_UNIT)*POWER_UNIT;
-    P_IT = a+ sum(b_flat,1)';
-    
-    dc_power = a_plus+ sum(b_flat_plus,1)';   
+%     a_plus = PUEs.*a;
+    a_plus = round(a/POWER_UNIT)*POWER_UNIT;
+    dc_power = a_plus+ sum(b_flat_plus,1)' + IDLE_POWER;   
     
     % switching cost
     p_SW = 0.4;
@@ -172,6 +182,7 @@ if IS_GENERATE_DATA
 %     t = 1:0.5:24+0.5
 %     temp = interp1q(t_raw, hourly_temp, t);
     t_OA = ones(1,T)*mean(hourly_temp);
+    cooling_power = raw_dc_power/PUE;
     
     % cooling risk cost
     p_CL = 0.3;
@@ -205,13 +216,9 @@ if IS_GENERATE_DATA
     p_RTP = ones(1,T);    
     
     % Emergency based DR %%%%%%%%%%    
-    
-    %% Peak-shaving
-    p_peak = 12; % cents kWh
-    p_base = 8;  % cents/ kWh
 
     %% Save the prepared data 
-    save([RESULT_PATH 'init_settings_shaving.mat']) 
+    save([RESULT_PATH 'init_settings.mat']) 
 else
-    load([RESULT_PATH 'init_settings_shaving.mat']);
+    load([RESULT_PATH 'init_settings.mat']);
 end

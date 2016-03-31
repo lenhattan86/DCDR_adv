@@ -7,8 +7,8 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-% init_settings
-init_settings_shaving
+init_settings
+% init_settings_shaving
 IS_LOAD = false;
 %% Simulation
 
@@ -20,10 +20,6 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 bjEnd = [2:2:12]*HOUR;
 
 %% Grid settings
-power_case = case47custom;
-numBuses = 47;
-dcBus = 2; % dc bus location
-pvBus = 45; % bus location of PV
 
 violationFreq = zeros(length(dcBus), length(bjEnd));
 
@@ -58,8 +54,8 @@ for b = 1:length(dcBus)
                 A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
             end    
         end        
-        [violationFreq(b,c), X, load_prof] = opt_vio_freq_batchjob(W, loadLevels, ...
-            dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, true);
+        [violationFreq(b,c),idle_power, a_power, b_power] = opt_vio_freq_batchjob(W, loadLevels, ...
+            dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, IDLE_POWER,IP,PP);
     end
 end
 violationFreq

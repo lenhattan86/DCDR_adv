@@ -1,31 +1,32 @@
 function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case, pv_cap, irrad_time,...
     pct_load, dc_power, interactive, dc_cap, ...
     aFlexiblitiesUpperBound, aFlexiblitiesLowerBound, ...
-    options, dcBus, numBuses, pvBus, grid_load_data, loadBus, numLoadLevels, verbose)
+    options, dcBus, numBuses, pvBus, grid_load_data, loadBus, numLoadLevels,IDLE_POWER, verbose)
 
     out_bounds = 0;
-    tsteps = length(irrad_time);
+    T = length(irrad_time);
 %     dc_power = dc_power/mean(dc_power)*mean(irrad_time/1000*pv_cap)*dc_ratio;
 
     total_ranges = 0;
-    B = dc_power - interactive;
-    X = zeros(1, tsteps);
-    for i = 1:tsteps
+    B = dc_power - interactive - IDLE_POWER;
+    X = zeros(1, T);
+    delay = zeros(1,T);
+    for t = 1:T
         temp_case = pwr_case;
-        temp_case.bus(:,[3,4]) = pct_load(i) * temp_case.bus(:,[3,4]);
+        temp_case.bus(:,[3,4]) = pct_load(t) * temp_case.bus(:,[3,4]);
 
-        pct_flux = irrad_time(i)/1000;
+        pct_flux = irrad_time(t)/1000;
         pv_pwr = pct_flux*pv_cap;
         
         % set up the grid load on a bus
         if isscalar(loadBus)
             if loadBus > 0
-                temp_case.bus(loadBus,3) = temp_case.bus(loadBus,3) + grid_load_data(i);
+                temp_case.bus(loadBus,3) = temp_case.bus(loadBus,3) + grid_load_data(t);
             end
         else
             numLoadBuses = length(loadBus);
             for b=1:numLoadBuses
-                temp_case.bus(b,3) = temp_case.bus(b,3) + grid_load_data(b,i);
+                temp_case.bus(b,3) = temp_case.bus(b,3) + grid_load_data(b,t);
             end
         end
 
@@ -33,8 +34,8 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
         temp_case.bus(pvBus,3) = temp_case.bus(pvBus,3) - pv_pwr;
 
         % Bounds of DC
-        upperBound = min(dc_power(i) - interactive(i) + aFlexiblitiesUpperBound(i), dc_cap);
-        lowerBound = max(dc_power(i) - interactive(i) + aFlexiblitiesLowerBound(i), 0);
+        upperBound = min(dc_power(t) - interactive(t) + aFlexiblitiesUpperBound(t), dc_cap);
+        lowerBound = max(dc_power(t) - interactive(t) + aFlexiblitiesLowerBound(t), 0);
 
         maxVoltage = temp_case.bus(1,12);
         minVoltage = temp_case.bus(1,13);
@@ -42,7 +43,7 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
         [results, success] = runpf(temp_case, options);
         if success == 0
             fprintf('Initial onvergence failure: PV_capacity = %d, time = %d\n',...
-                pv_cap, i);
+                pv_cap, t);
             break;
         end
 
@@ -51,7 +52,7 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
             % Never happens...
             disp('Upper bound less than lower bound.');
             boundGap = upperBound - lowerBound
-            selectedLoadsForDC = dc_power(i);
+            selectedLoadsForDC = dc_power(t);
         else
             loadIntervals = 0:1:numLoadLevels;
             selectedLoadsForDC = ((upperBound - lowerBound)/numLoadLevels).*loadIntervals + lowerBound;
@@ -67,7 +68,7 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
             [newResults, success] = runpf(temp_case, options);
             if success == 0
                 fprintf('Convergence failure: PV_capacity = %d, time = %d\n',...
-                    pv_cap, i);
+                    pv_cap, t);
                 % Set a place holder. This can never be the number of
                 % violations, so it is ignored.
                 violations(idx) = numBuses + 1;
@@ -81,10 +82,10 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
         end
 
         [smallestViolations, idx] = min(violations);
-        X(i) = selectedLoadsForDC(idx);
+        X(t) = selectedLoadsForDC(idx);
         out_bounds = out_bounds + smallestViolations;
     end
-    a_qos = X - B';
+    a_qos = X - B' - IDLE_POWER;
     dc_power_qos = X;    
-    violationFreq = out_bounds / (tsteps*numBuses);
+    violationFreq = out_bounds / (T*numBuses);
 end

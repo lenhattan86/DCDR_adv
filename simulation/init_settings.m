@@ -18,7 +18,7 @@ IS_LOAD_VIOLATION_MATRIX = false;
 verbose = false;
 if IS_GENERATE_DATA
     %% common constants
-    sampling_interval = 1; % minutes.
+    sampling_interval = 15; % minutes.
     time_interval = 5; % in minutes
     HOUR = 60/sampling_interval; % number of timeslots an hour.
     DAY = 24*HOUR; % number of timeslots a day.
@@ -26,7 +26,7 @@ if IS_GENERATE_DATA
     
     numLoadLevels = 50;
     
-    peak_to_cap_ratio = 0.7;
+    
     %% Grid settings
     power_case = case47custom;
 %     power_case = case57;
@@ -49,7 +49,7 @@ if IS_GENERATE_DATA
     %% load demand in the electricity grid.
     IS_GRID_LOAD = true;
     
-    load_mean = 15; % MW
+    load_mean = 10; % MW
     
     [Hour_End,COAST,EAST,FAR_WEST,NORTH,NORTH_C,SOUTHERN,SOUTH_C,WEST,ERCOT] ...
         = import_grid_load('traces/ecort_load_2016.xls');    
@@ -77,16 +77,26 @@ if IS_GENERATE_DATA
     end
     
     %% data center
-    PUE_orig = [1.16,1.17,1.16,1.20,1.22,1.22,1.24,1.26,1.35,1.32,1.25, ...
-        1.30,1.29,1.35,1.32,1.40,1.40,1.25,1.29,1.30,1.28,1.29,1.18,1.13]';
-    PUE = reshape((1+0.2*(rand(T/24,1)-0.5))*PUE_orig',T,1);
+%     PUE_orig = [1.16,1.17,1.16,1.20,1.22,1.22,1.24,1.26,1.35,1.32,1.25, ...
+%         1.30,1.29,1.35,1.32,1.40,1.40,1.25,1.29,1.30,1.28,1.29,1.18,1.13]';
+%     PUE = reshape((1+0.2*(rand(T/24,1)-0.5))*PUE_orig',T,1);
+    PUE = 1.3;
+    PUEs = PUE * ones(T,1);
     dc_cap = 20;
+    peak_to_cap_ratio = 0.7;
     dc_real_cap = peak_to_cap_ratio*dc_cap;
-    
     dc_ratio = 1;
     %P_IT = zeros(T,1);
     
+    IP = 40e-6; % server 's idle power in MW
+    PP = 200e-6; % server peak power in MW.
+    
+    ON_OFF =  false;
+    MAX_IDLE_POWER = dc_cap*IP/PP;
+    
+    
     POWER_UNIT =  dc_cap/numLoadLevels;
+    MAX_IDLE_POWER = round(MAX_IDLE_POWER/POWER_UNIT)*POWER_UNIT;
     %% UPS
     battery_types   = {'LA','LI','UC','FW','CAES'};
     ups_capacity_investment = 2000; % k$
@@ -146,23 +156,27 @@ if IS_GENERATE_DATA
     % compute the weight matrix of violation frequency  
     b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
     P_IT = a + sum(b_flat,1)';
-    dc_scale = peak_to_cap_ratio*dc_cap/max(P_IT);
+    dc_scale = peak_to_cap_ratio*(dc_cap-MAX_IDLE_POWER)/max(P_IT);
     a = a *dc_scale;
     BS = BS * dc_scale;  
     b_flat= BS./sum(A_bj,2)*ones(1,T).*A_bj;
+    P_IT = a + sum(b_flat,1)';    
+    if ON_OFF
+        IDLE_POWER = P_IT*IP/(PP-IP);
+        raw_dc_power = P_IT + IDLE_POWER;
+    else
+        raw_dc_power = P_IT + MAX_IDLE_POWER;
+        IDLE_POWER = MAX_IDLE_POWER;
+    end
     
-    raw_dc_power = a+ sum(b_flat,1)';
-    
-    BS_plus = repmat(PUE, BN,1) .* BS;
-    BS_plus = round(BS_plus/POWER_UNIT)*POWER_UNIT;
+%     BS_plus = repmat(PUEs, BN,1) .* BS;
+    BS_plus = round(BS/POWER_UNIT)*POWER_UNIT;
     b_flat_plus = BS_plus./sum(A_bj,2)*ones(1,T).*A_bj;
    
     
-    a_plus = PUE.*a;
-    a_plus = round(a_plus/POWER_UNIT)*POWER_UNIT;
-    P_IT = a+ sum(b_flat,1)';
-    
-    dc_power = a_plus+ sum(b_flat_plus,1)';   
+%     a_plus = PUEs.*a;
+    a_plus = round(a/POWER_UNIT)*POWER_UNIT;
+    dc_power = a_plus+ sum(b_flat_plus,1)' + IDLE_POWER;   
     
     % switching cost
     p_SW = 0.4;
@@ -174,6 +188,7 @@ if IS_GENERATE_DATA
 %     t = 1:0.5:24+0.5
 %     temp = interp1q(t_raw, hourly_temp, t);
     t_OA = ones(1,T)*mean(hourly_temp);
+    cooling_power = raw_dc_power/PUE;
     
     % cooling risk cost
     p_CL = 0.3;

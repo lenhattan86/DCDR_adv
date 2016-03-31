@@ -55,10 +55,11 @@ if is_printed
     print ('-depsc', [fig_path 'residential_load.eps']);
 end
 
-%% data center power
-figure_settings; load('results/script_generator.mat');  
 
-yArray = raw_dc_power;
+%% data center power
+figure_settings; load('results/init_settings.mat');  
+
+yArray = dc_power;
 xArray = (1:T)/HOUR;
 figure;
 plot(xArray,yArray, '-r', 'LineWidth', 1);
@@ -104,6 +105,21 @@ xlabel('Hours','FontSize',fontAxis);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'power_interactive.eps']);
+end
+
+% plot the PDF of QoS_delay_after
+idxes = [1 2 3 4];
+figure;
+normalized_delay = zeros(length(idxes), T);
+for i=1:length(idxes)
+    normalized_delay(i,:) = QoS_delay_after(i,:)./QoS_delay';
+    [f,xi] = ksdensity(normalized_delay(i,:));
+    hold on;
+    plot(xi,f);
+end
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'qos_pdf.eps']);
 end
 
 %% Flexibility of Batch job deadlines
