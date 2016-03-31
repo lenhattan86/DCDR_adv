@@ -55,6 +55,8 @@ if is_printed
     print ('-depsc', [fig_path 'residential_load.eps']);
 end
 
+%% supply & demand
+
 
 %% data center power
 figure_settings; load('results/init_settings.mat');  
@@ -94,21 +96,23 @@ if is_printed
 end
 
 figure;
+idxes = [1 3 5];
 xArray = (1:T)/HOUR;
-plot(xArray,a);
-for q=1:qos_length
+for q=1:length(idxes)
     hold on;
-    plot(xArray,a_qos(q,:),'LineWidth', 1);
+    plot(xArray,a_qos(idxes(q),:),'LineWidth', 1);
 end
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
+legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
+legend(legendStr,'Location','northeast','FontSize',fontLegend);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'power_interactive.eps']);
 end
 
 % plot the PDF of QoS_delay_after
-idxes = [1 2 3 4];
+idxes = [1 3 5];
 figure;
 normalized_delay = zeros(length(idxes), T);
 for i=1:length(idxes)
@@ -117,6 +121,8 @@ for i=1:length(idxes)
     hold on;
     plot(xi,f);
 end
+legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
+legend(legendStr,'Location','northeast','FontSize',fontLegend);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'qos_pdf.eps']);
@@ -152,7 +158,6 @@ set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'power_batchjobs.eps']);
 end
-
 
 %% Switching costs
 

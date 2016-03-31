@@ -98,21 +98,25 @@ if IS_GENERATE_DATA
     POWER_UNIT =  dc_cap/numLoadLevels;
     MAX_IDLE_POWER = round(MAX_IDLE_POWER/POWER_UNIT)*POWER_UNIT;
     %% UPS
-    battery_types   = {'LA','LI','UC','FW','CAES'};
-    ups_capacity_investment = 2000; % k$
+    battery_types   = {'LA','LI','UC','FW','CAES'};    
+    ups_capacity_investment = [1000:1000:5000]; % k$
+    len_investment = length(ups_capacity_investment);
     ups_energy_cost = [200 525 10000 5000 50]; % $/kWh
     %ups_cap     = 10/sampling_interval * dc_cap * ones(1,length(ups_energy_cost))./ups_energy_cost;
 %     ups_cap     = 10/sampling_interval * dc_cap  * ones(1,length(ups_energy_cost))./ups_energy_cost;
-    ups_cap     = ups_capacity_investment  * ones(1,length(ups_energy_cost))./ups_energy_cost; % MWh
+    ups_cap = zeros(len_investment, length(battery_types));
+    for i=1:len_investment
+        ups_cap(i,:)     = ups_capacity_investment(i)  * ones(1,length(ups_energy_cost))./ups_energy_cost; % MWh
+    end
     charge_rate = [10 5 1 1 4];
     power_investement = 100; %k$
     power_cost  = [125 175 100  250 600]; % $/kW
     %charging_power    = power_investement*ones(1, length(charge_rate))./power_cost; % MW
 %     r_charge = charging_power./ups_cap;
 %     r_discharge = charge_rate.*r_charge;
-    discharging_power = dc_cap*ones(1, length(charge_rate));
+    discharging_power = dc_cap*ones(len_investment, length(charge_rate));
     r_discharge = discharging_power./ups_cap;
-    r_charge = r_discharge./charge_rate;
+    r_charge = r_discharge./(ones(len_investment,1)*charge_rate);
     
     DoD         = [0.8 0.8 1 1 1];
     eff_coff    = [0.75 0.85 0.95 0.95 0.68];

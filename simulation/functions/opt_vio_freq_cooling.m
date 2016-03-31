@@ -1,6 +1,6 @@
 function [ violationFreq, PUEs] = ...
-    opt_vio_freq_cooling(W, loadLevels, P_IT, alpha, gamma, beta,...
-                TempRange, cm, is_plot)
+    opt_vio_freq_cooling(W, loadLevels, dc_power, PUE, alpha, gamma, beta,...
+                TempRange, cm, POWER_UNIT)
 
 
     %% test code
@@ -9,10 +9,11 @@ function [ violationFreq, PUEs] = ...
 %     W = W(:,T_from:T_to);
 %     P_IT = P_IT(T_from:T_to);
 %     loadLevels = loadLevels(:,T_from:T_to);
-
-    %% main code 
+    save('temp/opt_vio_freq_cooling');
+    %% main code     
     Temp_low = TempRange(1);
     Temp_high = TempRange(2);   
+    P_IT = dc_power/PUE;
     L = size(W,1);
     T = size(W,2);
     Q = beta*P_IT;
@@ -27,13 +28,11 @@ function [ violationFreq, PUEs] = ...
         minimize( sum(sum(W.*X)));
         subject to
 %             P_cooling == alpha*pow_pos(Q_r,3) + gamma*Q_r; % compute the cooling power consumption  
-            P_cooling == gamma*Q_r;
-%             P_cooling >= gamma*Q_r;
-%             P_cooling <= (gamma+0.3)*Q_r;
+            P_cooling == PUE*Q_r/beta;
             Q_r >= 0;
-            sum(loadLevels.*X)' == P_IT + P_cooling;
-%             sum(sum(loadLevels.*X)) <= sum(P_IT) + P_cooling + epsilon* POWER_UNIT;               
-%             sum(sum(loadLevels.*X)) >= sum(P_IT) + P_cooling - epsilon* POWER_UNIT;
+%             sum(loadLevels.*X)' == P_IT + P_cooling;
+            sum(loadLevels.*X)' <= P_IT + P_cooling + POWER_UNIT/2;
+            sum(loadLevels.*X)' >= P_IT + P_cooling - POWER_UNIT/2;
             sum(X,1) == ones(1,T); % load selection constraint  
             Temp_dc >= Temp_low;
             Temp_dc <= Temp_high;            
@@ -48,11 +47,4 @@ function [ violationFreq, PUEs] = ...
     end
     
     violationFreq = sum(sum(W.*X));
-    PUEs = (P_cooling+P_IT)./P_IT;
-    if is_plot
-        figure;
-        plot(P_IT);
-        hold on; 
-        plot(P_cooling);
-    end
 end

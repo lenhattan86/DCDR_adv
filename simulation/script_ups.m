@@ -23,7 +23,7 @@ violationFreq_upperbound = zeros(1, length(dcBus));
 X_e_array = zeros(length(dcBus), length(ramp_time_generator), T);
 %% Run simulation.
 
-for b = 1:length(dcBus)
+for b = 1:len_investment
     disp('---------------------------------------------------')
     pvIrradi = irrad_time; %Feb26Irrad(1:sampling_interval:T*sampling_interval);
     
@@ -43,7 +43,7 @@ for b = 1:length(dcBus)
         dc_power = on_load_levels(dc_power, loadLevels);
         %% step 2: Optimize the violation frequency via scheduling the workload
         [violationFreq(b,c), X , X_e] = opt_vio_freq_ups(W, loadLevels, ...
-             POWER_UNIT, dc_power, ups_cap(c), r_charge(c), r_discharge(c), ...
+             POWER_UNIT, dc_power, ups_cap(b,c), r_charge(b,c), r_discharge(b,c), ...
              DoD(c), eff_coff(c), ramp_time(c), N_cycles_per_T(c), ...
              false);
          X_e_array(b, c, :) = X_e;

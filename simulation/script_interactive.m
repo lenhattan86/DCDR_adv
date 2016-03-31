@@ -52,6 +52,7 @@ numLoadLevels = 50;
 a_qos= zeros(qos_length,T);
 dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
+% vary the bugdet
 for b = 1:length(dcBus)    
     pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);    
     for qos = 1:qos_length

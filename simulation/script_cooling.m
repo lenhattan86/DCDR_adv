@@ -33,7 +33,7 @@ alpha = P_oac*((t_RA_avg - mean(t_OA))^temp_power_oac)/(a_avg^3); % P_oac = alph
 %gamma = P_wc *(t_RA_avg^temp_power_wc)/(a_avg); % P_wc  = gamma/(t_RA^temp_power) * d
 gamma = 0.3;
 beta = 1;
-cm = 20;
+cm = 1;
 
 lower_bound = P_IT;
 upper_bound = min(2*P_IT,dc_real_cap);
@@ -65,8 +65,8 @@ for b = 1:length(dcBus)
     %% Step 2: optimize the utility based in the range of acceptable temperature
         TempRange  = [t_RA_avg - t_differences(c) t_RA_avg + t_differences(c)];        
         
-        [ violationFreq(b,c), PUEs] = opt_vio_freq_cooling(W, loadLevels, P_IT, alpha, gamma, beta,...
-                TempRange, cm, is_plot);
+        [ violationFreq(b,c), PUEs] = opt_vio_freq_cooling(W, loadLevels, dc_power, PUE, alpha, gamma, beta,...
+                TempRange, cm, POWER_UNIT);
     end
 end
 violationFreq
