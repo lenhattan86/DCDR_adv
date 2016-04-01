@@ -13,12 +13,19 @@ FIG_PATH = 'figs/';
 RESULT_PATH = 'results/';
 TRACE_PATH = 'traces/';
 
+IS_OFFICIAL = false;
+
 IS_GENERATE_DATA = 1;
 IS_LOAD_VIOLATION_MATRIX = false;
 verbose = false;
+
 if IS_GENERATE_DATA
     %% common constants
-    sampling_interval = 15; % minutes.
+    if IS_OFFICIAL
+        sampling_interval = 1; % minutes.
+    else
+        sampling_interval = 15; % minutes.
+    end
     time_interval = 5; % in minutes
     HOUR = 60/sampling_interval; % number of timeslots an hour.
     DAY = 24*HOUR; % number of timeslots a day.
@@ -160,7 +167,8 @@ if IS_GENERATE_DATA
     au = 0.4; % average utilization of a workloads
     con = 0.9; % maximum utilization after consolidation
     
-    BN = 10; % average number of jobs per time slot.
+%     BN = 10; % average number of jobs per time slot.
+    BN = 5; % average number of jobs per time slot.
     BM = 0.5; % power ratio of batch jobs vs. interactive workload.
     
     % generate the raw Batch jobs and a workload

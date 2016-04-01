@@ -24,7 +24,8 @@ bjEnd = [2:2:12]*HOUR;
 violationFreq = zeros(length(dcBus), length(bjEnd));
 
 %% Run simulation.
-
+count = 0;
+progressbar
 for b = 1:length(dcBus)
     disp('---------------------------------------------------')
     pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
@@ -56,6 +57,8 @@ for b = 1:length(dcBus)
         end        
         [violationFreq(b,c),idle_power, a_power, b_power] = opt_vio_freq_batchjob(W, loadLevels, ...
             dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, IDLE_POWER,IP,PP);
+        count = count + 1;
+        progressbar(count/(length(bjEnd)*length(dcBus)))
     end
 end
 violationFreq

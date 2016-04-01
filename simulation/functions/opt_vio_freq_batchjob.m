@@ -16,8 +16,7 @@ function [violationFreq, idle_power, a_power, b_power] = ...
     dc_pwr_cap = max(loadLevels);
     epsilon = POWER_UNIT; % acceptable errors
     
-    ON_OFF = true;
-    
+    ON_OFF = true;    
     
     %% Optimzie the violation frequency            
     cvx_begin 
@@ -26,11 +25,10 @@ function [violationFreq, idle_power, a_power, b_power] = ...
         minimize( sum(sum(W.*X)) );
         subject to
             sum(X,1)==ones(1,T); % load selection constraint.
-%             sum(sum(loadLevels.*X)) == sum(dc_power);
             b >= 0;
             if ON_OFF
 %                 idle_power = (sum(A_bj.*b, 1) + a')*IP/PP;
-                sum(A_bj.*b, 1) + a' + (sum(A_bj.*b, 1) + a')*IP/(PP-IP) == sum(loadLevels.*X,1);
+                (sum(A_bj.*b, 1) + a')*PP/(PP-IP) == sum(loadLevels.*X,1);
             else    
                 sum(A_bj.*b, 1) + a' + IDLE_POWER == sum(loadLevels.*X,1);
             end
@@ -51,6 +49,6 @@ function [violationFreq, idle_power, a_power, b_power] = ...
     end
     %% return results
     a_power = a;
-    b_power = sum(A_bj.*b, 1);    
+    b_power = sum(A_bj.*b, 1);
     violationFreq = sum(sum(W.*X));
 end
