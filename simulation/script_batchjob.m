@@ -21,45 +21,45 @@ bjEnd = [2:2:12]*HOUR;
 
 %% Grid settings
 
-violationFreq = zeros(length(dcBus), length(bjEnd));
+violationFreq = zeros(length(bjEnd));
+idle_power = zeros(length(bjEnd), T);
+a_power = zeros(length(bjEnd), T);
+b_power = zeros(length(bjEnd), T);
 
 %% Run simulation.
 count = 0;
 progressbar
-for b = 1:length(dcBus)
-    disp('---------------------------------------------------')
-    pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
-    % step 1: compute weights of violation frequency
-    % Prepare the matrix of violation frequencies for the given power consumption level of data center
-    if IS_LOAD
-        load('results/violation_frequency_matrix');
-    else
-        [W, loadLevels] =  comp_vio_wei(power_case, PVcapacity,...
-                    pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
-                    dc_cap,...
-                    POWER_UNIT, ...  
-                    opt, dcBus(b), numBuses, pvBus, grid_load_data,loadBus, false);
-        save('results/violation_frequency_matrix', 'W', 'loadLevels');
-    end
-    % step 2: Optimize the violation frequency via scheduling the workload      
-    for c = 1:length(bjEnd)
-        c
-        % create the matrix of arrival and deadline times.
-        A_bj = zeros(BN*T,T);
-        E = S + ceil(random('Uniform',bjEnd(c),bjEnd(c)));
-        for i = 1:1:BN*T
-            if E(i) > T
-                A_bj(i,S(i):T)    = ones(1,T-S(i)+1);
-                A_bj(i,1:E(i)-T)  = ones(1,E(i)-T);
-            else
-                A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
-            end    
-        end        
-        [violationFreq(b,c),idle_power, a_power, b_power] = opt_vio_freq_batchjob(W, loadLevels, ...
-            dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, IDLE_POWER,IP,PP);
-        count = count + 1;
-        progressbar(count/(length(bjEnd)*length(dcBus)))
-    end
+pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
+% step 1: compute weights of violation frequency
+% Prepare the matrix of violation frequencies for the given power consumption level of data center
+if IS_LOAD
+    load('results/violation_frequency_matrix');
+else
+    [W, loadLevels] =  comp_vio_wei(power_case, PVcapacity,...
+                pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
+                dc_cap,...
+                POWER_UNIT, ...  
+                opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, false);
+    save('results/violation_frequency_matrix', 'W', 'loadLevels');
+end
+% step 2: Optimize the violation frequency via scheduling the workload      
+for c = 1:length(bjEnd)
+    c
+    % create the matrix of arrival and deadline times.
+    A_bj = zeros(BN*T,T);
+    E = S + ceil(random('Uniform',bjEnd(c),bjEnd(c)));
+    for i = 1:1:BN*T
+        if E(i) > T
+            A_bj(i,S(i):T)    = ones(1,T-S(i)+1);
+            A_bj(i,1:E(i)-T)  = ones(1,E(i)-T);
+        else
+            A_bj(i,S(i):E(i)) = ones(1,E(i)-S(i)+1);
+        end    
+    end        
+    [violationFreq(c), idle_power(c,:), a_power(c,:), b_power(c,:)] = opt_vio_freq_batchjob(W, loadLevels, ...
+        dc_power, a_plus, BS_plus, A_bj, POWER_UNIT, IDLE_POWER,ON_OFF,IP,PP);
+    count = count + 1;
+    progressbar(count/length(bjEnd))
 end
 violationFreq
 

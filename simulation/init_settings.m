@@ -13,7 +13,9 @@ FIG_PATH = 'figs/';
 RESULT_PATH = 'results/';
 TRACE_PATH = 'traces/';
 
-IS_OFFICIAL = false;
+IS_OFFICIAL = true;
+
+IS_TESTING_THE_GRID = true;
 
 IS_GENERATE_DATA = 1;
 IS_LOAD_VIOLATION_MATRIX = false;
@@ -22,10 +24,12 @@ verbose = false;
 if IS_GENERATE_DATA
     %% common constants
     if IS_OFFICIAL
+        IS_TESTING_THE_GRID = false;
         sampling_interval = 1; % minutes.
     else
-        sampling_interval = 15; % minutes.
+        sampling_interval = 5; % minutes.
     end
+    
     time_interval = 5; % in minutes
     HOUR = 60/sampling_interval; % number of timeslots an hour.
     DAY = 24*HOUR; % number of timeslots a day.
@@ -37,16 +41,10 @@ if IS_GENERATE_DATA
     
     
     %% Grid settings
-    power_case = case47custom;
-%     power_case = case57;
+    power_case = case47custom; dcBus = 5; pvBus = 20; loadBus = 43;
+%     power_case = case47custom; dcBus = 2; pvBus = 2; loadBus = 2;
+%     power_case = case57; dcBus = 4; pvBus = 11; loadBus = 40;
     numBuses = size(power_case.bus,1);
-    
-    % grid
-    dcBus = 2; % dc bus location
-    pvBus = 2; % bus location of PV
-%     loadBus = 0;
-    loadBus = 2;
-%     loadBus = 1:numBuses;
     
     %% PV generation
     load([TRACE_PATH 'testdayirrad.mat']);
@@ -60,7 +58,7 @@ if IS_GENERATE_DATA
     %% load demand in the electricity grid.
     IS_GRID_LOAD = true;
     
-    load_mean = 10; % MW
+    load_mean = 5; % MW
     
     [Hour_End,COAST,EAST,FAR_WEST,NORTH,NORTH_C,SOUTHERN,SOUTH_C,WEST,ERCOT] ...
         = import_grid_load('traces/ecort_load_2016.xls');    
@@ -154,7 +152,7 @@ if IS_GENERATE_DATA
     % operational cost
     p_BG = 0.6;
     
-    %% workload
+    %% workload power with necessasy cooling power
     % generate data center demand traces
     interactive_raw = load('traces/SAPnew/sapTrace.tab');
     col = 4; % column of the data loaded
@@ -176,17 +174,17 @@ if IS_GENERATE_DATA
         BM/(1-BM)*sum(mean(a)./au)/con); % generate batch jobs based on statistical properties    
     % compute the weight matrix of violation frequency      
     b_flat = BS./sum(A_bj,2)*ones(1,T).*A_bj;
-    P_IT = a + sum(b_flat,1)';
-    dc_scale = peak_to_cap_ratio*(dc_cap-MAX_IDLE_POWER)/max(P_IT);
+    P_IT_plus = a + sum(b_flat,1)';
+    dc_scale = peak_to_cap_ratio*(dc_cap-MAX_IDLE_POWER)/max(P_IT_plus);
     a = a *dc_scale;
     BS = BS * dc_scale;  
     b_flat= BS./sum(A_bj,2)*ones(1,T).*A_bj;
-    P_IT = a + sum(b_flat,1)';    
+    P_IT_plus = a + sum(b_flat,1)';    
     if ON_OFF
-        IDLE_POWER = P_IT*IP/(PP-IP);
-        raw_dc_power = P_IT + IDLE_POWER;
+        IDLE_POWER = P_IT_plus*IP/(PP-IP);
+        raw_dc_power = P_IT_plus + IDLE_POWER;
     else
-        raw_dc_power = P_IT + MAX_IDLE_POWER;
+        raw_dc_power = P_IT_plus + MAX_IDLE_POWER;
         IDLE_POWER = MAX_IDLE_POWER;
     end
     
@@ -221,18 +219,18 @@ if IS_GENERATE_DATA
     t_RA_avg = 70;
     % compute power cooling acceptable power range
     % P_cooling = gamma/(tRA - tOA)*a.^3;
-    a_avg = mean(a);
-    P_cooling = (mean(PUE)-1) * a_avg;
-    cooling_ratio = 0.5;
-    P_oac = cooling_ratio*P_cooling;
-    P_wc = (1-cooling_ratio)* P_cooling;
-    temp_power_oac = 1.5;
-    temp_power_wc = 1.1;
+%     a_avg = mean(a);
+%     P_cooling = (mean(PUE)-1) * a_avg;
+%     cooling_ratio = 0.5;
+%     P_oac = cooling_ratio*P_cooling;
+%     P_wc = (1-cooling_ratio)* P_cooling;
+%     temp_power_oac = 1.5;
+%     temp_power_wc = 1.1;
     % outside air cooler
-    alpha = P_oac*((t_RA_avg - mean(t_OA))^temp_power_oac)/(a_avg^3); % P_oac = alpha/((t_RA - t_OA)^temp_power) * d^3
+%     alpha = P_oac*((t_RA_avg - mean(t_OA))^temp_power_oac)/(a_avg^3); % P_oac = alpha/((t_RA - t_OA)^temp_power) * d^3
     % water chiller
     %gamma = P_wc *(t_RA_avg^temp_power_wc)/(a_avg); % P_wc  = gamma/(t_RA^temp_power) * d
-    gamma = 0.3;
+    gamma = PUE-1;
     beta = 1;
     cm = 2*(sampling_interval/15);
     
@@ -267,7 +265,25 @@ if IS_GENERATE_DATA
     % Emergency based DR %%%%%%%%%%    
 
     %% Save the prepared data 
+    
     save([RESULT_PATH 'init_settings.mat']) 
+    % Test the grid setting
+    if IS_TESTING_THE_GRID
+        opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
+        [W, loadLevels] =  comp_vio_wei(power_case, PVcapacity,...
+            irrad_time, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
+            dc_cap,...
+            POWER_UNIT, ...  
+            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, false);
+        
+        figure;
+        plot(W');   
+        
+        violationFreq_default = computeViolationFrequency (power_case, PVcapacity, irrad_time,...
+        minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
+        opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, verbose)
+    end
+    
 else
     load([RESULT_PATH 'init_settings.mat']);
 end

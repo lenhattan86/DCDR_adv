@@ -1,15 +1,8 @@
-function [ violationFreq, PUEs] = ...
-    opt_vio_freq_cooling(W, loadLevels, dc_power, PUE, alpha, gamma, beta,...
+function [ violationFreq, P_IT, P_cooling, PUEs, Temp_dc] = ...
+    opt_vio_freq_cooling(W, loadLevels, dc_power, PUE, beta,...
                 TempRange, cm, POWER_UNIT)
 
-
-    %% test code
-%     T_from = 1;
-%     T_to = 4;
-%     W = W(:,T_from:T_to);
-%     P_IT = P_IT(T_from:T_to);
-%     loadLevels = loadLevels(:,T_from:T_to);
-    save('temp/opt_vio_freq_cooling');
+%     save('temp/opt_vio_freq_cooling');
     %% main code     
     Temp_low = TempRange(1);
     Temp_high = TempRange(2);   
@@ -19,20 +12,20 @@ function [ violationFreq, PUEs] = ...
     Q = beta*P_IT;
     temp_init = (Temp_low+Temp_high)/2;
 %     save('temp/temp');
+    accuracy = 0.5;
     %% Optimzie the violation frequency                
     cvx_begin 
         variable X(L,T) binary;
         variable Q_r(T); % removed heat
         variable Temp_dc(T); % data center temperature
-        variable P_cooling(T);
+%         variable P_cooling(T);
         minimize( sum(sum(W.*X)));
         subject to
-%             P_cooling == alpha*pow_pos(Q_r,3) + gamma*Q_r; % compute the cooling power consumption  
-            P_cooling == PUE*Q_r/beta;
+            P_cooling = (PUE-1)*Q_r/beta;
             Q_r >= 0;
 %             sum(loadLevels.*X)' == P_IT + P_cooling;
-            sum(loadLevels.*X)' <= P_IT + P_cooling + POWER_UNIT/2;
-            sum(loadLevels.*X)' >= P_IT + P_cooling - POWER_UNIT/2;
+            sum(loadLevels.*X)' <= P_IT + P_cooling + accuracy*POWER_UNIT;
+            sum(loadLevels.*X)' >= P_IT + P_cooling - accuracy*POWER_UNIT;
             sum(X,1) == ones(1,T); % load selection constraint  
             Temp_dc >= Temp_low;
             Temp_dc <= Temp_high;            
@@ -42,9 +35,10 @@ function [ violationFreq, PUEs] = ...
     
     if ~strcmp(cvx_status,'Solved');
         cvx_status
-        disp('suggestion: increase cm!');
+        disp('suggestion: increase accuracy!');
         error('cannot solve CVX problem');        
     end
     
-    violationFreq = sum(sum(W.*X));
+    violationFreq = sum(sum(W.*X))
+    PUEs = (P_cooling+P_IT)/P_IT;
 end

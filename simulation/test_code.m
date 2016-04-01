@@ -8,7 +8,7 @@ load('temp/opt_vio_freq_cooling');
     Q = beta*P_IT;
     temp_init = (Temp_low+Temp_high)/2;
 %     save('temp/temp');
-    n = 15;
+    accuracy = 0.5;
     %% Optimzie the violation frequency                
     cvx_begin 
         variable X(L,T) binary;
@@ -21,8 +21,8 @@ load('temp/opt_vio_freq_cooling');
             P_cooling = (PUE-1)*Q_r/beta;
             Q_r >= 0;
 %             sum(loadLevels.*X)' == P_IT + P_cooling;
-            sum(loadLevels.*X)' <= P_IT + P_cooling + n*POWER_UNIT/2;
-            sum(loadLevels.*X)' >= P_IT + P_cooling - n*POWER_UNIT/2;
+            sum(loadLevels.*X)' <= P_IT + P_cooling + accuracy*POWER_UNIT;
+            sum(loadLevels.*X)' >= P_IT + P_cooling - accuracy*POWER_UNIT;
             sum(X,1) == ones(1,T); % load selection constraint  
             Temp_dc >= Temp_low;
             Temp_dc <= Temp_high;            
@@ -32,8 +32,8 @@ load('temp/opt_vio_freq_cooling');
     
     if ~strcmp(cvx_status,'Solved');
         cvx_status
-        disp('suggestion: increase cm!');
+        disp('suggestion: increase accuracy!');
         error('cannot solve CVX problem');        
     end
     
-    violationFreq = sum(sum(W.*X));
+    violationFreq = sum(sum(W.*X))

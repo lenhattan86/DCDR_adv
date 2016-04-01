@@ -1,12 +1,12 @@
 function [dc_power, P_cooling] = min_peak_shaving_cooling(grid_load_data, P_IT, ...
-            alpha, gamma, beta, TempRange, cm)
+            gamma, beta, TempRange, cm)
     
     Temp_low = TempRange(1);
     Temp_high = TempRange(2);   
     T = length(P_IT);
     Q = beta*P_IT;
     temp_init = (Temp_low+Temp_high)/2;
-    save('temp/test_code.mat');
+%     save('temp/test_code.mat');
     %% Optimzie the violation frequency                
     cvx_begin 
         variable Q_r(T); % removed heat
@@ -18,7 +18,7 @@ function [dc_power, P_cooling] = min_peak_shaving_cooling(grid_load_data, P_IT, 
         subject to
             peak_power >= dc_power + grid_load_data;
             dc_power == P_IT + P_cooling;
-            P_cooling == gamma*Q_r;
+            P_cooling == gamma*Q_r/beta;
             Q_r >= 0;
             Temp_dc >= Temp_low;
             Temp_dc <= Temp_high;            

@@ -13,10 +13,11 @@ init_settings_15
 %% Run simulation
 dc_power_after = zeros(length(t_differences),T);
 P_cooling_after = zeros(length(t_differences),T);
+Temp_dc = zeros(length(t_differences),T);
 for c = 1:length(t_differences)        
     TempRange  = [t_RA_avg - t_differences(c) t_RA_avg + t_differences(c)];        
-    IT_POWER = dc_power/PUE;
-    [dc_power_after(c,:), P_cooling_after(c,:)] = min_peak_shaving_cooling(grid_load_data ,IT_POWER, alpha, gamma, beta,...
+    P_IT = dc_power/PUE;
+    [dc_power_after(c,:), P_cooling_after(c,:), Temp_dc(c,:)] = min_peak_shaving_cooling(grid_load_data ,P_IT, gamma, beta,...
             TempRange, cm);
 end
 
@@ -39,7 +40,7 @@ end
 if 1
     for c = 1:length(t_differences)
         figure;        
-        y_array = [IT_POWER' ; P_cooling_after(c,:)];
+        y_array = [P_IT' ; P_cooling_after(c,:)];
         bar(y_array',1,'stacked');
         legend('IT power','Cooling power');
     end

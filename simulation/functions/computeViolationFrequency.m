@@ -9,8 +9,7 @@ function [violationFrequency] = computeViolationFrequency (pwr_case, pv_cap, irr
 
     for i = 1:T
         temp_case = pwr_case;
-        temp_case.bus(:,[3,4]) = pct_load(i) * temp_case.bus(:,[3,4]);
-
+        temp_case.bus(:,[3,4]) = pct_load(i) * temp_case.bus(:,[3,4]);        
         pct_flux = irrad_time(i)/1000;
         pv_pwr = pct_flux*pv_cap; 
         

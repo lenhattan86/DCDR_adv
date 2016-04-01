@@ -8,13 +8,15 @@ figure_settings;
 %  	16 17 18 19 18; 19 20 21 22 14; 22 23 24 25 14; 25 26 27 28 20],'test plot', ...
 %  	[[0:3:24]' [5:3:29]'],[],{'LA' 'LI' 'UC' 'FW' 'CAES'});
 
+%% %%%%%%%%%%%%%%%%%% General Figures %%%%%%%%%%%%%%%%%
+
 %% Plot the total demand & supply
 figure_settings; 
 load('results/init_settings.mat');
 % load('results/init_settings_15.mat');
 yArray = (dc_power + grid_load_data)*15;
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
 ylabel('Energy (MWh)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -38,7 +40,7 @@ figure_settings; load('results/init_settings.mat');
 % pv_pwr = pct_flux*PVcapacity; 
 yArray = pv_pwr;
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -53,7 +55,7 @@ end
 
 %% residential load
 figure_settings; load('results/script_generator.mat');  
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 is_printed = true;
 xArray = (1:T)/HOUR;
 numLoadBuses = length(loadBus);
@@ -83,7 +85,7 @@ figure_settings; load('results/init_settings.mat');
 
 yArray = dc_power;
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 plot(xArray,yArray, '-r', 'LineWidth', 1);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -96,11 +98,13 @@ if is_printed
     print ('-depsc', [fig_path 'dc_power.eps']);
 end
 
-%% Flexibility of interactive workload
+%% %%%%%%%%%%%%%%%%%% 2. Voltage regulation %%%%%%%%%%%%%%%%%
+
+%% Interactive workload
 figure_settings;
 load('results/script_interactive.mat');  
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 yArray = violationFreq(1,:);
 xArray = 100*QoS_delay_relax;
 plot(xArray,yArray, '-ok', 'LineWidth', lineWitdth);
@@ -115,7 +119,9 @@ if is_printed
     print ('-depsc', [fig_path 'script_interactive.eps']);
 end
 
-figure;
+
+
+figure('units','inches', 'Position',[0.0 0 4 3]);
 idxes = [1 3 5];
 xArray = (1:T)/HOUR;
 for q=1:length(idxes)
@@ -133,7 +139,7 @@ end
 
 % plot the PDF of QoS_delay_after
 idxes = [1 3 5];
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 normalized_delay = zeros(length(idxes), T);
 for i=1:length(idxes)
     normalized_delay(i,:) = QoS_delay_after(i,:)./QoS_delay';
@@ -148,11 +154,24 @@ if is_printed
     print ('-depsc', [fig_path 'qos_pdf.eps']);
 end
 
-%% Flexibility of Batch job deadlines
+
+%% Switching costs
+figure('units','inches', 'Position',[0.0 0 4 3]);
+switchingCosts = sum(pos(dc_power_qos(:,2:T)-dc_power_qos(:,1:T-1)),2);
+yArray = switchingCosts;
+bar(yArray,'stacked'); 
+ylabel('Power (MW)','FontSize',fontAxis);
+% xlabel('Hours','FontSize',fontAxis);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+if is_printed
+    print ('-depsc', [fig_path 'switching_cost_interactive.eps']);
+end
+
+%% Batch job
 figure_settings;
 load('results/script_batchjob.mat');  
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 yArray = violationFreq(1,:);
 xArray = bjEnd/HOUR;
 plot(xArray,yArray, '-ok', 'LineWidth', lineWitdth);
@@ -167,7 +186,7 @@ if is_printed
     print ('-depsc', [fig_path 'script_batchjob.eps']);
 end
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 xArray = (1:T)/HOUR;
 dc_power_after = sum(loadLevels.*X)
 % bar(load_prof,'stacked'); 
@@ -179,35 +198,28 @@ if is_printed
     print ('-depsc', [fig_path 'power_batchjobs.eps']);
 end
 
-%% Switching costs
+% Switching costs
 
-figure_settings;
-load('results/script_batchjob.mat');  
+% figure('units','inches', 'Position',[0.0 0 4 3]);
+% dc_power_after = idle_power + a_power + b_power;
+% switchingCosts = sum(pos(dc_power_qos(:,2:T)-dc_power_qos(:,1:T-1)),2);
+% yArray = switchingCosts;
+% bar(yArray); 
+% ylabel('Power (MW)','FontSize',fontAxis);
+% % xlabel('Hours','FontSize',fontAxis);
+% set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+% if is_printed
+%     print ('-depsc', [fig_path 'switching_cost_interactive.eps']);
+% end
 
-figure;
-xArray = bjEnd/HOUR;
-yArray = zeros(1, length(xArray));
-bar(yArray, 0.2);
-ylabel('Switching power cost (MW)','FontSize',fontAxis);
-xlabel('Batchjob delay','FontSize',fontAxis);
-% legendStr = {strDataCenter};
-% legend(legendStr,'Location','northeast','FontSize',fontLegend);
-xtickLabels = {'Original','','','','','',''};
-set(gca,'xticklabel',xtickLabels,'FontSize',fontAxis);
-
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
-if is_printed
-    print ('-depsc', [fig_path 'switching_cost_bj.eps']);
-end
-
-%% Workload Power consumption.
+% Workload Power consumption.
 
 
-%% Flexiblity of cooling systems.
+%% Cooling systems.
 figure_settings;
 load('results/script_cooling.mat');  
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 yArray = violationFreq(1,:);
 xArray = t_differences;
 plot(xArray, yArray, '-ok', 'LineWidth', lineWitdth);
@@ -222,12 +234,31 @@ set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'script_cooling.eps']);
 end
+% Power profile & temperature
+if 0
+    for c = 1:length(t_differences)
+        figure('units','inches', 'Position',[0.0 0 4 3]);        
+        y_array = [P_IT' ; P_cooling_after(c,:)];
+        bar(y_array',1,'stacked');
+        legend('IT power','Cooling power');
+        ylim([0 dc_cap]);
+    end
+    for c = 1:length(t_differences)
+        figure('units','inches', 'Position',[0.0 0 4 3]);        
+        y_array = Temp_dc(c,:);
+        plot(y_array');
+        legend('Temperature');        
+    end
+end
 
-%% Cooling energy consumption
-figure_settings;
-load('results/script_cooling.mat');  
+% histogram of temperature
+c = 5;
+figure('units','inches', 'Position',[0.0 0 4 3]);        
+histogram(round(Temp_dc(c,:)))
 
-figure;
+% Cooling energy consumption
+
+figure('units','inches', 'Position',[0.0 0 4 3]);
 yArray = violationFreq(1,:);
 xArray = t_differences;
 plot(xArray, yArray, '-ok', 'LineWidth', lineWitdth);
@@ -243,10 +274,10 @@ if is_printed
     print ('-depsc', [fig_path 'energy_consumption_cooling.eps']);
 end
 
-%% UPS types
+%% Energy Storages
 figure_settings;
 load('results/script_ups.mat');  
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 yArray = violationFreq(1,:);
 xArray = 1:length(yArray);
 bar(xArray, yArray, 0.2);
@@ -260,7 +291,7 @@ if is_printed
     print ('-depsc', [fig_path 'script_ups.eps']);
 end
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 temp = squeeze(X_e_array(1,:,:));
 R_e = max(temp,0);
 D_e = max(-temp,0);
@@ -275,7 +306,7 @@ if is_printed
     print ('-depsc', [fig_path 'script_ups_power.eps']);
 end
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 xArray = (1:T)/HOUR;
 yArray = squeeze(X_e_array(1,:,:));
 plot(xArray,yArray,'LineWidth', 1);
@@ -290,12 +321,12 @@ if is_printed
     print ('-depsc', [fig_path 'script_ups_power_profile.eps']);
 end
 
-%% generator types
+%% Backup generators
 figure_settings;
 fontAxis = 10;
 load('results/script_generator.mat');  
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 yArray = violationFreq(1,:);
 xArray = 1:length(yArray);
 bar(xArray, yArray, 0.2);
@@ -308,7 +339,7 @@ if is_printed
     print ('-depsc', [fig_path 'script_generator.eps']);
 end
 
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 temp = squeeze(G_array(1,:,:));
 yArray = sum(temp,2)/HOUR;
 xArray = 1:length(yArray);
@@ -326,13 +357,13 @@ end
 
 % figure
 % plot(squeeze(G_array(1,2,:))')
-% figure;
+% figure('units','inches', 'Position',[0.0 0 4 3]);
 % plot(squeeze(G_array(1,3,:))')
 % figure
 % plot(squeeze(G_array(1,4,:))')
 
 % Operating cost
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 xArray = 1:length(yArray);
 yArray = zeros(1,length(xArray));
 bar(xArray, yArray, 0.2);
@@ -345,7 +376,7 @@ if is_printed
     print ('-depsc', [fig_path 'gen_operational_cost.eps']);
 end
 % emissions
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 xArray = 1:length(yArray);
 yArray = zeros(1,length(xArray));
 bar(xArray, yArray, 0.2);
@@ -358,13 +389,14 @@ if is_printed
     print ('-depsc', [fig_path 'gen_emissions.eps']);
 end
 
-%% Peak-shaving %%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%% 3. Voltage regulation %%%%%%%%%%%%%%%%%
+
 %% batch job
 figure_settings; load('results/peak_shaving_batch_jobs.mat');  
 
 yArray = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 plot(xArray,dc_power+grid_load_data,'LineWidth', lineWitdth);
 hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
@@ -379,12 +411,13 @@ if is_printed
     print ('-depsc', [fig_path 'peak_shaving_batch_jobs.eps']);
 end
 %% cooling
+
 %% batch job
 figure_settings; load('results/peak_shaving_cooling.mat');  
 
 yArray = dc_power_after';
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 % plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
 % hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
@@ -400,12 +433,30 @@ if is_printed
     print ('-depsc', [fig_path 'peak_shaving_cooling.eps']);
 end
 
+if 0
+    figure('units','inches', 'Position',[0.0 0 4 3]);
+    plot(dc_power+grid_load_data);
+    for c = 1:length(t_differences)
+        hold on;
+        plot(dc_power_after(c,:)' + grid_load_data);
+    end
+end
+
+if 0
+    for c = 1:length(t_differences)
+        figure('units','inches', 'Position',[0.0 0 4 3]);        
+        y_array = [P_IT' ; P_cooling_after(c,:)];
+        bar(y_array',1,'stacked');
+        legend('IT power','Cooling power');
+    end
+end
+
 %% energy storages
 figure_settings; load('results/peak_shaving_ups.mat');  
 
 yArray = dc_power_after';
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 % plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
 % hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
@@ -426,7 +477,7 @@ figure_settings; load('results/peak_shaving_generator.mat');
 
 yArray = dc_power_after';
 xArray = (1:T)/HOUR;
-figure;
+figure('units','inches', 'Position',[0.0 0 4 3]);
 % plot(xArray,dc_power,'LineWidth', lineWitdth);
 % hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
@@ -440,3 +491,5 @@ set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
 if is_printed
     print ('-depsc', [fig_path 'peak_shaving_generator.eps']);
 end
+
+%% %%%%%%%%%%%%%%%%%% 4. Others %%%%%%%%%%%%%%%%%
