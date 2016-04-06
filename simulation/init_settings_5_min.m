@@ -24,17 +24,12 @@ verbose = false;
 
 if IS_GENERATE_DATA
     %% common constants
-    if IS_OFFICIAL
-        IS_TESTING_THE_GRID = false;
-        sampling_interval = 1; % minutes.
-    else
-        sampling_interval = 5; % minutes.
-    end
+    sampling_interval = 5; % minutes.
     
     common_settings;
     %% Save the prepared data 
     
-    save([RESULT_PATH 'init_settings.mat']) 
+    save([RESULT_PATH 'init_settings_5_min.mat']) 
     % Test the grid setting
     if IS_TESTING_THE_GRID
         opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
@@ -53,5 +48,5 @@ if IS_GENERATE_DATA
     end
     
 else
-    load([RESULT_PATH 'init_settings.mat']);
+    load([RESULT_PATH 'init_settings_5_min.mat']);
 end

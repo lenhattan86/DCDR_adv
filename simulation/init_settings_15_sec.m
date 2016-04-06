@@ -2,7 +2,7 @@ clear all; close all; clc;
 cvx_solver Gurobi;
 s_quiet = cvx_quiet(true);
 s_pause = cvx_pause(false);
-% cvx_precision low;
+cvx_precision low;
 % cvx_precision high;
 
 addpath('lib/matpower4.1');
@@ -16,20 +16,15 @@ TRACE_PATH = 'traces/';
 
 IS_OFFICIAL = true;
 
-IS_TESTING_THE_GRID = true;
+IS_TESTING_THE_GRID = false;
 
 IS_GENERATE_DATA = 1;
 IS_LOAD_VIOLATION_MATRIX = false;
 verbose = false;
 
 if IS_GENERATE_DATA
-    %% common constants
-    if IS_OFFICIAL
-        IS_TESTING_THE_GRID = false;
-        sampling_interval = 1; % minutes.
-    else
-        sampling_interval = 5; % minutes.
-    end
+    %% common constants    
+    sampling_interval = 0.25; % minutes.
     
     common_settings;
     %% Save the prepared data 

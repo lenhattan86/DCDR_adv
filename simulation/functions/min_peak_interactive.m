@@ -10,6 +10,7 @@ function [dc_power_after, a_after] = min_peak_interactive...
         subject to   
             peak_energy_max >= sum(b_flat,1)' + a_min + (sum(b_flat,1)' + a_min)*IP/(PP-IP) + grid_load_data;
             a_min >= aLowerBound';            
+%             a_min <= a;
     cvx_end       
     
     if ~strcmp(cvx_status,'Solved');

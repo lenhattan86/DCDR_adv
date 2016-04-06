@@ -7,14 +7,14 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings_15
+init_settings_15_min
 IS_LOAD = false;
 verbose = false;
 %% Simulation
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of
 % analysis
-M = a_plus/PP; % number of servers.
+M = a_pred/PP; % number of servers.
 lamda = M*util_level;
 
 %util_level = arrival_rate/M;
@@ -23,10 +23,10 @@ QoS_delay = ones(T,1)./(mu-util_level);
 server_power = PP;
 %% workload configuration
  % INPUT:
-QoS_delay_relax = [0.0:0.05:0.25];
+QoS_delay_relax = [0.05:0.05:0.25];
 qos_length              = length(QoS_delay_relax);
-aFlexiblitiesUpperBound = zeros(qos_length, length(a));
-aFlexiblitiesLowerBound = zeros(qos_length, length(a));
+aFlexiblitiesUpperBound = zeros(qos_length, length(a_pred));
+aFlexiblitiesLowerBound = zeros(qos_length, length(a_pred));
 
 for qos = 1:qos_length
     QoS_delay_slow_down = (1 + QoS_delay_relax(qos)) * QoS_delay;
@@ -47,7 +47,7 @@ dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
 for qos = 1:qos_length
     [dc_power_after(qos,:), a_after(qos,:)] = min_peak_interactive...
-        ( grid_load_data, a_plus,  aFlexiblitiesLowerBound(qos,:), b_flat_plus, PP, IP);
+        ( grid_load_data_pred, a_pred,  aFlexiblitiesLowerBound(qos,:), b_flat, PP, IP);
 end
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);

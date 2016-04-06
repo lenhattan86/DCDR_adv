@@ -16,7 +16,7 @@ load('results/init_settings.mat');
 % load('results/init_settings_15.mat');
 yArray = (dc_power + grid_load_data)*15;
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
 ylabel('Energy (MWh)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -24,7 +24,7 @@ legendStr = {'Load demand'};
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.3]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'peak_demand.eps']);
 end
@@ -40,7 +40,7 @@ figure_settings; load('results/init_settings.mat');
 % pv_pwr = pct_flux*PVcapacity; 
 yArray = pv_pwr;
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -48,14 +48,14 @@ legendStr = {'PV generation'};
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.3]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'pv_generation.eps']);
 end
 
 %% residential load
-figure_settings; load('results/script_generator.mat');  
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure_settings; load('results/init_settings.mat');  
+figure('units','inches', 'Position', figure_size_scr);
 is_printed = true;
 xArray = (1:T)/HOUR;
 numLoadBuses = length(loadBus);
@@ -72,7 +72,7 @@ ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
 ylim([0,max(max(grid_load_data))*1.1]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'residential_load.eps']);
 end
@@ -85,7 +85,7 @@ figure_settings; load('results/init_settings.mat');
 
 yArray = dc_power;
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,yArray, '-r', 'LineWidth', 1);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -93,7 +93,7 @@ legendStr = {'DC power'};
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.3]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'dc_power.eps']);
 end
@@ -104,25 +104,25 @@ end
 figure_settings;
 load('results/script_interactive.mat');  
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 yArray = violationFreq(1,:);
 xArray = 100*QoS_delay_relax;
 plot(xArray,yArray, '-ok', 'LineWidth', lineWitdth);
 ylabel(strViolationFreq,'FontSize',fontAxis);
-xlabel('Extended delay (%)','FontSize',fontAxis);
-legendStr = {'QoS'};
-legend(legendStr,'Location','northeast','FontSize',fontLegend);
+xlabel(strDelayFlexibility,'FontSize',fontAxis);
+% legendStr = {'QoS'};
+% legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
 xlim([0,max(xArray)]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'script_interactive.eps']);
 end
 
+violationFreq(1,:)/violationFreq(1,1)
 
-
-figure('units','inches', 'Position',[0.0 0 4 3]);
-idxes = [1 3 5];
+figure('units','inches', 'Position', figure_size_scr);
+idxes = [1 6];
 xArray = (1:T)/HOUR;
 for q=1:length(idxes)
     hold on;
@@ -132,37 +132,54 @@ ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
 legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'power_interactive.eps']);
 end
 
 % plot the PDF of QoS_delay_after
-idxes = [1 3 5];
-figure('units','inches', 'Position',[0.0 0 4 3]);
+idxes = [6];
+figure('units','inches', 'Position', figure_size_scr);
 normalized_delay = zeros(length(idxes), T);
 for i=1:length(idxes)
-    normalized_delay(i,:) = QoS_delay_after(i,:)./QoS_delay';
+    normalized_delay(i,:) = QoS_delay_after(idxes(i),:)./QoS_delay';
     [f,xi] = ksdensity(normalized_delay(i,:));
     hold on;
     plot(xi,f);
 end
 legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'qos_pdf.eps']);
 end
 
+% Histogram
+idxes = [6];
+figure('units','inches', 'Position', figure_size_scr);
+normalized_delay = zeros(length(idxes), T);
+for i=1:length(idxes)
+    normalized_delay(i,:) = QoS_delay_after(idxes(i),:)./QoS_delay';
+    [f,xi] = ksdensity(normalized_delay(i,:));
+    hold on;
+    plot(xi,f);
+end
+legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
+legend(legendStr,'Location','northeast','FontSize',fontLegend);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'qos_histogram.eps']);
+end
 
-%% Switching costs
-figure('units','inches', 'Position',[0.0 0 4 3]);
+
+% Switching costs
+figure('units','inches', 'Position', figure_size_scr);
 switchingCosts = sum(pos(dc_power_qos(:,2:T)-dc_power_qos(:,1:T-1)),2);
 yArray = switchingCosts;
 bar(yArray,'stacked'); 
 ylabel('Power (MW)','FontSize',fontAxis);
 % xlabel('Hours','FontSize',fontAxis);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'switching_cost_interactive.eps']);
 end
@@ -170,9 +187,10 @@ end
 %% Batch job
 figure_settings;
 load('results/script_batchjob.mat');  
+% is_printed =  false;
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
-yArray = violationFreq(1,:);
+figure('units','inches', 'Position', figure_size_scr);
+yArray = violationFreq;
 xArray = bjEnd/HOUR;
 plot(xArray,yArray, '-ok', 'LineWidth', lineWitdth);
 ylabel(strViolationFreq,'FontSize',fontAxis);
@@ -181,33 +199,38 @@ legendStr = {strDataCenter};
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
  xlim([0,max(xArray)]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'script_batchjob.eps']);
 end
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
-xArray = (1:T)/HOUR;
-dc_power_after = sum(loadLevels.*X)
-% bar(load_prof,'stacked'); 
-plot(xArray,dc_power_after,'LineWidth', lineWitdth);
+figure('units','inches', 'Position', figure_size_scr);
+c = length(bjEnd);
+dc_power_after = [idle_power(c,:); a_power(c,:); b_power(c,:)];
+bar(dc_power_after',1,'stacked'); 
+% plot(idle_power(c,:)');
+% hold on;
+% plot(idle_power(c,:)' + a_power(c,:)');
+% hold on;
+% plot(idle_power(c,:)' + a_power(c,:)'+ b_power(c,:)');
+% bar(dc_power_after,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 % xlabel('Hours','FontSize',fontAxis);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'power_batchjobs.eps']);
 end
 
 % Switching costs
 
-% figure('units','inches', 'Position',[0.0 0 4 3]);
+% figure('units','inches', 'Position', figure_size_scr);
 % dc_power_after = idle_power + a_power + b_power;
 % switchingCosts = sum(pos(dc_power_qos(:,2:T)-dc_power_qos(:,1:T-1)),2);
 % yArray = switchingCosts;
 % bar(yArray); 
 % ylabel('Power (MW)','FontSize',fontAxis);
 % % xlabel('Hours','FontSize',fontAxis);
-% set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+% set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 % if is_printed
 %     print ('-depsc', [fig_path 'switching_cost_interactive.eps']);
 % end
@@ -218,18 +241,20 @@ end
 %% Cooling systems.
 figure_settings;
 load('results/script_cooling.mat');  
-
-figure('units','inches', 'Position',[0.0 0 4 3]);
+violationFreq(1,:)/violationFreq(1,1)
+figure('units','inches', 'Position', figure_size_scr);
 yArray = violationFreq(1,:);
 xArray = t_differences;
 plot(xArray, yArray, '-ok', 'LineWidth', lineWitdth);
 ylabel(strViolationFreq,'FontSize',fontAxis);
-xlabel('Relaxed temperature (F)','FontSize',fontAxis);
+xlabel(strRelaxTemperature,'FontSize',fontAxis);
+% xLabels = {'70','68-72','66-74','64-76';'62-78','60-80'};
+% set(gca,'xticklabel',xLabels,'FontSize',fontAxis);
 legendStr = {strDataCenter};
 legend(legendStr,'Location','southeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
 xlim([min(xArray),max(xArray)]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 
 if is_printed
     print ('-depsc', [fig_path 'script_cooling.eps']);
@@ -237,14 +262,14 @@ end
 % Power profile & temperature
 if 0
     for c = 1:length(t_differences)
-        figure('units','inches', 'Position',[0.0 0 4 3]);        
+        figure('units','inches', 'Position', figure_size_scr);        
         y_array = [P_IT' ; P_cooling_after(c,:)];
         bar(y_array',1,'stacked');
         legend('IT power','Cooling power');
         ylim([0 dc_cap]);
     end
     for c = 1:length(t_differences)
-        figure('units','inches', 'Position',[0.0 0 4 3]);        
+        figure('units','inches', 'Position', figure_size_scr);        
         y_array = Temp_dc(c,:);
         plot(y_array');
         legend('Temperature');        
@@ -252,32 +277,54 @@ if 0
 end
 
 % histogram of temperature
-c = 5;
-figure('units','inches', 'Position',[0.0 0 4 3]);        
+c = length(t_differences);
+figure('units','inches', 'Position', figure_size_scr);        
 histogram(round(Temp_dc(c,:)))
+ylabel('histogram','FontSize',fontAxis);
+xlabel(strTemperature,'FontSize',fontAxis);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'temperature_historgram.eps']);
+end
 
 % Cooling energy consumption
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
-yArray = violationFreq(1,:);
+figure('units','inches', 'Position', figure_size_scr);
+yArray = sum(P_cooling_after,2)/HOUR;
 xArray = t_differences;
-plot(xArray, yArray, '-ok', 'LineWidth', lineWitdth);
-ylabel('Energy consumption','FontSize',fontAxis);
-xlabel('Relaxed temperature (F)','FontSize',fontAxis);
+plot(xArray, yArray, patternCooling, 'LineWidth', lineWitdth);
+ylabel('Energy consumption (MWh)','FontSize',fontAxis);
+xlabel(strRelaxTemperature,'FontSize',fontAxis);
 % legendStr = {strDataCenter};
 % legend(legendStr,'Location','southeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
 xlim([min(xArray),max(xArray)]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 
 if is_printed
     print ('-depsc', [fig_path 'energy_consumption_cooling.eps']);
 end
 
 %% Energy Storages
-figure_settings;
-load('results/script_ups.mat');  
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure_settings; load('results/script_ups.mat');  
+
+vio_default = 1.7; max_vio = max(max(violationFreq(:,:))); violationFreq= violationFreq/max_vio*vio_default;
+
+figure('units','inches', 'Position', figure_size_scr);
+yArray = violationFreq/max_vio*vio_default;
+xArray = ups_capacity_investment;
+plot(xArray, yArray,'LineWidth', 1);
+ylabel(strViolationFreq,'FontSize',fontAxis);
+xlabel('Cost (k$)','FontSize',fontAxis);
+ylim([0,max(max(yArray))*1.1]);
+legend(battery_types,'Location','southeast','FontSize',fontLegend);
+
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'script_ups_curves.eps']);
+end
+
+figure('units','inches', 'Position', figure_size_scr);
 yArray = violationFreq(1,:);
 xArray = 1:length(yArray);
 bar(xArray, yArray, 0.2);
@@ -286,12 +333,12 @@ xlabel('Energy storages','FontSize',fontAxis);
 set(gca,'xticklabel',battery_types,'FontSize',fontAxis);
 ylim([0,max(max(yArray))*1.1]);
 
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'script_ups.eps']);
 end
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 temp = squeeze(X_e_array(1,:,:));
 R_e = max(temp,0);
 D_e = max(-temp,0);
@@ -300,13 +347,13 @@ bar(y, 0.6);
 ylabel('Power generation (MWh)','FontSize',fontAxis);
 xlabel('Energy storages','FontSize',fontAxis);
 set(gca,'xticklabel',battery_types,'FontSize',fontAxis);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 legend({'charge','discharge'},'Location','northwest','FontSize',fontLegend);
 if is_printed
     print ('-depsc', [fig_path 'script_ups_power.eps']);
 end
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 xArray = (1:T)/HOUR;
 yArray = squeeze(X_e_array(1,:,:));
 plot(xArray,yArray,'LineWidth', 1);
@@ -315,7 +362,7 @@ xlabel('Hours','FontSize',fontAxis);
 % set(gca,'xticklabel',battery_types,'FontSize',fontAxis);
 % legendStr = {strDataCenter};
 legend(battery_types,'Location','southeast','FontSize',fontLegend);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 % legend({'charge','discharge'},'Location','northwest','FontSize',fontLegend);
 if is_printed
     print ('-depsc', [fig_path 'script_ups_power_profile.eps']);
@@ -326,20 +373,29 @@ figure_settings;
 fontAxis = 10;
 load('results/script_generator.mat');  
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 yArray = violationFreq(1,:);
-xArray = 1:length(yArray);
-bar(xArray, yArray, 0.2);
-ylabel(strViolationFreq,'FontSize',fontAxis);
-xlabel('Generator types','FontSize',fontAxis);
-set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
+generation = sum(G_array,2)/HOUR;
+% xArray = 1:length(yArray);
+xArray = ramp_time_generator;
+% bar(xArray, yArray, 0.2);
+% plot(xArray, yArray, patternPeakShaving, 'LineWidth', lineWitdth);
+[hAx, hLine1, hLine2] =  plotyy(xArray, yArray, xArray, generation);
+% ylabel(strViolationFreq,'FontSize',fontAxis);
+set(hLine1,'LineStyle', patternVoltageFreq, 'LineWidth', 2)
+set(hLine2,'LineStyle', patternCost, 'LineWidth', 2)
+ylabel(hAx(1), strViolationFreq) % left y-axis
+ylabel(hAx(2), 'Generation(MWh)') % right y-axis
+% xlabel('Generator types','FontSize',fontAxis);
+xlabel('Ramp time (mins)','FontSize',fontAxis);
+% set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
 ylim([0,max(max(yArray))*1.1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'script_generator.eps']);
 end
 
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 temp = squeeze(G_array(1,:,:));
 yArray = sum(temp,2)/HOUR;
 xArray = 1:length(yArray);
@@ -350,20 +406,20 @@ ylabel('Power generation (MW)','FontSize',fontAxis);
 % set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
 legend(generator_type,'Location','southeast','FontSize',fontLegend);
 ylim([0,dc_cap]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'script_generator_power.eps']);
 end
 
 % figure
 % plot(squeeze(G_array(1,2,:))')
-% figure('units','inches', 'Position',[0.0 0 4 3]);
+% figure('units','inches', 'Position', figure_size_scr);
 % plot(squeeze(G_array(1,3,:))')
 % figure
 % plot(squeeze(G_array(1,4,:))')
 
 % Operating cost
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 xArray = 1:length(yArray);
 yArray = zeros(1,length(xArray));
 bar(xArray, yArray, 0.2);
@@ -371,12 +427,12 @@ ylabel('Operational cost','FontSize',fontAxis);
 xlabel('Generator types','FontSize',fontAxis);
 set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
 % ylim([0,max(max(yArray))*1.1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'gen_operational_cost.eps']);
 end
 % emissions
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 xArray = 1:length(yArray);
 yArray = zeros(1,length(xArray));
 bar(xArray, yArray, 0.2);
@@ -384,57 +440,141 @@ ylabel('emissions','FontSize',fontAxis);
 xlabel('Generator types','FontSize',fontAxis);
 set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
 % ylim([0,max(max(yArray))*1.1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'gen_emissions.eps']);
 end
 
-%% %%%%%%%%%%%%%%%%%% 3. Voltage regulation %%%%%%%%%%%%%%%%%
+%% %%%%%%%%%%%%%%%%%% 3. Peak Shaving %%%%%%%%%%%%%%%%%
 
-%% batch job
-figure_settings; load('results/peak_shaving_batch_jobs.mat');  
+%% Interactive workload
 
-yArray = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+figure_settings; load('results/peak_shaving_interactive.mat'); 
+load_demand = dc_power+grid_load_data;
+peak_demand = max(load_demand);
+
+figure('units','inches', 'Position', figure_size_scr);
+total_load = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = (peak_demand-max(total_load'))/peak_demand*100;
+xArray = QoS_delay_relax*100;
+plot(xArray,yArray, patternPeakShaving, 'LineWidth', lineWitdth);
+ylabel(strPeakReduction,'FontSize',fontAxis);
+xlabel(strDelayFlexibility,'FontSize',fontAxis);
+% legendStr = {strDataCenter};
+% legend(legendStr,'Location','northeast','FontSize',fontLegend);
+ylim([min(yArray),peak_reduction_max]);
+xlim([0,max(xArray)]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_interactive.eps']);
+end
+
+temp = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = temp(length(temp(:,1)),:)';
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,dc_power+grid_load_data,'LineWidth', lineWitdth);
 hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-legendStr = {'original','0.5 hour','1 hour', '1.5 hours', '2 hours'};
+legendStr = {'original','25 %'};
 legend(legendStr,'Location','southeast','FontSize',fontLegend);
 % ylim([0,max(max(yArray))*1.3]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_interactive_power.eps']);
+end
+
+%% batch job
+figure_settings; load('results/peak_shaving_batch_jobs.mat'); 
+load_demand = dc_power+grid_load_data;
+peak_demand = max(load_demand);
+
+figure('units','inches', 'Position', figure_size_scr);
+
+total_load = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = (peak_demand-max(total_load'))/peak_demand*100;
+
+yArray = [yArray];
+xArray = [bjEnd/HOUR];
+
+plot(xArray,yArray, patternPeakShaving, 'LineWidth', lineWitdth);
+ylabel(strPeakReduction,'FontSize',fontAxis);
+xlabel(strBJDeandline,'FontSize',fontAxis);
+% legendStr = {strDataCenter};
+% legend(legendStr,'Location','northeast','FontSize',fontLegend);
+% ylim([0,max(dc_power + grid_load_data)*1.1]);
+ylim([0,peak_reduction_max]);
+xlim([0,max(xArray)]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'peak_shaving_batch_jobs.eps']);
 end
+
+temp = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = temp([4],:)';
+xArray = (1:T)/HOUR;
+figure('units','inches', 'Position', figure_size_scr);
+plot(xArray,load_demand,'LineWidth', lineWitdth);
+hold on;
+plot(xArray,yArray,'LineWidth', lineWitdth);
+ylabel('Power (MW)','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
+legendStr = {'original','2 hours'};
+legend(legendStr,'Location','southeast','FontSize',fontLegend);
+ylim([0,max(dc_power + grid_load_data)*1.1]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_batch_jobs_power.eps']);
+end
+
+
 %% cooling
 
-%% batch job
 figure_settings; load('results/peak_shaving_cooling.mat');  
+load_demand = dc_power+grid_load_data;
+peak_demand = max(load_demand);
 
-yArray = dc_power_after';
+figure('units','inches', 'Position', figure_size_scr);
+total_load = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = (peak_demand-max(total_load'))/peak_demand*100;
+xArray = t_differences;
+plot(xArray,yArray, patternPeakShaving, 'LineWidth', lineWitdth);
+ylabel(strPeakReduction,'FontSize',fontAxis);
+xlabel(strRelaxTemperature,'FontSize',fontAxis);
+% legendStr = {strDataCenter};
+% legend(legendStr,'Location','northeast','FontSize',fontLegend);
+ylim([0,peak_reduction_max]);
+xlim([0,max(xArray)]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_cooling.eps']);
+end
+
+temp = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = temp([1 4],:)';
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
 % plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
 % hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-% legendStr = {'original','0.5 hour','1 hour', '1.5 hours', '2 hours'};
-% legend(legendStr,'Location','southeast','FontSize',fontLegend);
+legendStr = {'original',sprintf('64-76(%cF)', char(176))};
+legend(legendStr,'Location','southeast','FontSize',fontLegend);
 % ylim([0,max(max(yArray))*1.3]);
-ylim([0,dc_cap]);
+ylim([0,max(dc_power + grid_load_data)*1.1]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
-    print ('-depsc', [fig_path 'peak_shaving_cooling.eps']);
+    print ('-depsc', [fig_path 'peak_shaving_cooling_power.eps']);
 end
 
 if 0
-    figure('units','inches', 'Position',[0.0 0 4 3]);
+    figure('units','inches', 'Position', figure_size_scr);
     plot(dc_power+grid_load_data);
     for c = 1:length(t_differences)
         hold on;
@@ -444,7 +584,7 @@ end
 
 if 0
     for c = 1:length(t_differences)
-        figure('units','inches', 'Position',[0.0 0 4 3]);        
+        figure('units','inches', 'Position', figure_size_scr);        
         y_array = [P_IT' ; P_cooling_after(c,:)];
         bar(y_array',1,'stacked');
         legend('IT power','Cooling power');
@@ -453,43 +593,106 @@ end
 
 %% energy storages
 figure_settings; load('results/peak_shaving_ups.mat');  
+load_demand = dc_power+grid_load_data;
+peak_demand = max(load_demand);
 
-yArray = dc_power_after';
+figure('units','inches', 'Position', figure_size_scr);
+total_load = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = (peak_demand-max(total_load'))/peak_demand*100;
+xArray = 1:length(yArray);
+bar(xArray, yArray, 0.2);
+xlabel('Energy storages','FontSize',fontAxis);
+set(gca,'xticklabel',battery_types,'FontSize',fontAxis);
+ylabel(strPeakReduction,'FontSize',fontAxis);
+% legendStr = {strDataCenter};
+% legend(legendStr,'Location','northeast','FontSize',fontLegend);
+ylim([0,peak_reduction_max]);
+% xlim([0,max(xArray)]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_ups.eps']);
+end
+
+yArray = total_load;
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
+figure('units','inches', 'Position', figure_size_scr);
+% plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
+% hold on;
+plot(xArray,yArray,'LineWidth', lineWitdth);
+ylabel('Power (MW)', 'FontSize', fontAxis);
+xlabel('Hours', 'FontSize', fontAxis);
+legendStr = battery_types;
+legend(legendStr,'Location','southeast','FontSize',fontLegend);
+ylim([0,max(dc_power + grid_load_data)*1.1]);
+xlim([0,max(xArray)+1]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_ups_power.eps']);
+end
+
+%% Back-up generators
+figure_settings; load('results/peak_shaving_generator.mat'); 
+fontAxis = 10;
+load_demand = dc_power+grid_load_data;
+peak_demand = max(load_demand);
+
+figure('units','inches', 'Position', figure_size_scr);
+total_load = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
+yArray = (peak_demand-max(total_load'))/peak_demand*100;
+% xArray = 1:length(yArray);
+xArray = gen_budget;
+plot(xArray,yArray,patternPeakShaving,'LineWidth', lineWitdth);
+% bar(xArray, yArray, 0.2);
+xlabel('Generation bugdet (USD)','FontSize',fontAxis);
+ylim([0,peak_reduction_max]);
+% set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
+ylabel(strPeakReduction,'FontSize',fontAxis);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+if is_printed
+    print ('-depsc', [fig_path 'peak_shaving_generator.eps']);
+end
+
+
+
+
+yArray = total_load;
+xArray = (1:T)/HOUR;
+figure('units','inches', 'Position', figure_size_scr);
 % plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
 % hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-% legendStr = {battery_types};
-legend(battery_types,'Location','southeast','FontSize',fontLegend);
-% ylim([0,max(max(yArray))*1.3]);
-ylim([0,dc_cap]);
+% legendStr = generator_type;
+% legend(legendStr,'Location','southeast','FontSize',fontLegend);
+ylim([0,peak_reduction_max]);
 xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
-    print ('-depsc', [fig_path 'peak_shaving_ups.eps']);
+    print ('-depsc', [fig_path 'peak_shaving_generator_power.eps']);
 end
 
-%% Back-up generators
-figure_settings; load('results/peak_shaving_generator.mat');  
+c=3;
+emissions_NO = NOx*sum(G_array(c, :))/HOUR;
+emissions_CO = CO*sum(G_array(c, :))/HOUR;
+emissions_HC = HC*sum(G_array(c, :))/HOUR;
+emissions_PM = PM*sum(G_array(c, :))/HOUR;
+emissions_SO2 = SO2*sum(G_array(c, :))/HOUR;
+emissions = [emissions_NO; emissions_CO; emissions_HC; emissions_PM; emissions_SO2]';
 
-yArray = dc_power_after';
+yArray = total_load;
 xArray = (1:T)/HOUR;
-figure('units','inches', 'Position',[0.0 0 4 3]);
-% plot(xArray,dc_power,'LineWidth', lineWitdth);
-% hold on;
-plot(xArray,yArray,'LineWidth', lineWitdth);
-ylabel('Power (MW)','FontSize',fontAxis);
-xlabel('Hours','FontSize',fontAxis);
-% legendStr = {battery_types};
-legend(generator_type,'Location','northeast','FontSize',fontLegend);
-ylim([0,dc_cap]);
-xlim([0,max(xArray)+1]);
-set (gcf, 'PaperUnits', 'inches', 'PaperPosition', [0.0 0 4.0 3.0]);
+figure('units','inches', 'Position', figure_size_scr);
+
+bar(emissions, 'grouped');
+ylabel('Emissions (kg)','FontSize',fontAxis);
+generator_type       = {'Diesel', 'D. DPF', 'Gas', 'Gas Micro.'};
+set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
+legendStr = {'NOx','CO','HC','PM','SO2'};
+legend(legendStr,'Location','northeast','FontSize',fontLegend);
+set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
-    print ('-depsc', [fig_path 'peak_shaving_generator.eps']);
+    print ('-depsc', [fig_path 'peak_shaving_generator_emission.eps']);
 end
 
 %% %%%%%%%%%%%%%%%%%% 4. Others %%%%%%%%%%%%%%%%%

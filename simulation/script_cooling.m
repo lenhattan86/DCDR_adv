@@ -6,14 +6,15 @@
 % Discription: Given flexibility of delaying interactive workload, how the
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings
+% init_settings
+init_settings_15
 % IS_LOAD_VIOLATION_MATRIX = true;
 %% Simulation
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of pf
 % analysis
 
-is_plot = true;
+is_plot = false;
 
 %% workload configuration
 t_differences = 0:2:10; % acceptable temperature.
@@ -24,6 +25,11 @@ upper_bound = dc_cap;
 violationFreq = zeros(length(dcBus), length(t_differences));
 P_cooling_after = zeros(length(t_differences),T);
 Temp_dc = zeros(length(t_differences),T);
+
+violationFreq_upperbound = computeViolationFrequency (power_case, PVcapacity, irrad_time,...
+    minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
+    opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, verbose);
+
 %% Run simulation
 count = 0;
 progressbar
@@ -35,7 +41,8 @@ for b = 1:length(dcBus)
                 pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                 lower_bound, upper_bound, numLoadLevels, ...  ...                    
                 opt, dcBus(b), numBuses, pvBus, grid_load_data, loadBus,  false);
-    
+    SCALE = 10000;
+    W = SCALE*W; 
     for c = 1:length(t_differences)        
     %% Step 2: optimize the utility based in the range of acceptable temperature
         TempRange  = [t_RA_avg - t_differences(c) t_RA_avg + t_differences(c)];        
@@ -47,6 +54,7 @@ for b = 1:length(dcBus)
         progressbar(count/length(t_differences) *length(dcBus));    
     end
 end
+violationFreq = violationFreq/SCALE;
 violationFreq
 %%
 save('results/script_cooling.mat');

@@ -7,9 +7,10 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings_15
+init_settings_15_min
 % init_settings
 IS_LOAD = false;
+is_plot = false;
 %% Simulation
 
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
@@ -17,7 +18,7 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % analysis
 
 %% workload configuration
-bjEnd = [1:0.5:2]*HOUR;
+bjEnd = [0.5:0.5:5]*HOUR;
 
 %% Grid settings
 dc_power_after =  zeros(length(bjEnd), T);
@@ -40,15 +41,14 @@ for c = 1:length(bjEnd)
         end
     end        
     [dc_power_after(c,:), bj_after(c,:)] = min_peak_using_batch_jobs...
-        ( grid_load_data ,a, BS, A_bj,PP, IP, false);
-%     [dc_power_after(c,:), bj_after(c,:)] = min_peak_using_batch_jobs( a_plus, BS_plus, A_bj, false);
+        (grid_load_data_pred, a_pred, BS_pred, A_bj, PP, IP, false);
 end
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
 save('results/peak_shaving_batch_jobs.mat');
 
 %% Plot figures
-if 1
+if is_plot
     figure;
 %     plot(raw_dc_power);
 %     hold on;

@@ -8,7 +8,8 @@
 %TODO: The code may not co-locate the batch jobs.
 
 % init_settings
-init_settings_15_min
+init_settings_1
+% init_settings_15
 IS_LOAD = false;
 %% Simulation
 
@@ -42,8 +43,6 @@ else
                 opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, false);
     save('results/violation_frequency_matrix', 'W', 'loadLevels');
 end
-SCALE = 10000;
-W = SCALE*W; 
 violationFreqUpperbound = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
         minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
         opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, verbose);
@@ -67,10 +66,9 @@ for c = 1:length(bjEnd)
     count = count + 1;
     progressbar(count/length(bjEnd))
 end
-violationFreq = violationFreq/SCALE;
 violationFreq
 
 % compute the switching costs.
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
-save('results/script_batchjob.mat');
+save('results/script_batchjob_v1.mat');

@@ -7,8 +7,10 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
+% init_settings_15
 init_settings
 IS_LOAD = false;
+is_save = true;
 verbose = false;
 %% Simulation
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
@@ -46,7 +48,7 @@ end
 
 violationFreq = zeros(length(dcBus), qos_length);
 
-numLoadLevels = 50;
+% numLoadLevels = 50;
 a_qos= zeros(qos_length,T);
 dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
@@ -65,7 +67,9 @@ for b = 1:length(dcBus)
     end
 end
 violationFreq
-save([RESULT_PATH 'script_interactive.mat']);
+if is_save
+    save([RESULT_PATH 'script_interactive.mat']);
+end
 %%
 plot(QoS_delay_relax(:), violationFreq(1,:), '-ok', 'LineWidth', 4);
 % plot(x,[optimalBus,optimalBus], '--r', 'LineWidth', 4);

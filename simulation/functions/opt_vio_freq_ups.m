@@ -1,10 +1,12 @@
 function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
-            POWER_UNIT, dc_power, ups_cap, r_charge, r_discharge, DoD, eff_coff , ramp_time, N_cycles_per_T,...
+            POWER_UNIT, dc_power, ups_cap, r_charge, r_discharge, DoD, eff_coff ...
+            , ramp_time, N_cycles_per_T, HOUR,...
              isPlot)
     
     T  = size(W,2);
     L  = size(W,1);
     life_cycle_rate = 1;
+    ups_cap = ups_cap*HOUR; % normalize the energy unit
     P_D_e = life_cycle_rate*N_cycles_per_T * DoD *ups_cap;
     %% Optimzie the violation frequency      
     E_0 = ups_cap/2;
@@ -25,8 +27,8 @@ function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
             end
             E >= (1-DoD)*ups_cap;
             E <= ups_cap;
-            E(1)   == E_0 + eff_coff*X_e(1);
-            E(2:T) == eff_coff*(X_e(2:T)) +  E(1:T-1);
+            E(1)   == E_0 + eff_coff*(X_e(1));
+            E(2:T) == eff_coff*(X_e(2:T)) + E(1:T-1);
             E(T)   == E_0;
             sum(pos(-X_e)) <= P_D_e; % life-time
     cvx_end
