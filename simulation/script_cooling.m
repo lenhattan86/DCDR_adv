@@ -6,8 +6,8 @@
 % Discription: Given flexibility of delaying interactive workload, how the
 %TODO: The code may not co-locate the batch jobs.
 
-% init_settings
-init_settings_15
+init_settings
+% init_settings_15
 % IS_LOAD_VIOLATION_MATRIX = true;
 %% Simulation
 opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses

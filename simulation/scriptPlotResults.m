@@ -44,33 +44,40 @@ figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-legendStr = {'PV generation'};
-legend(legendStr,'Location','northeast','FontSize',fontLegend);
-ylim([0,max(max(yArray))*1.3]);
+% legendStr = {'PV generation'};
+% legend(legendStr,'Location','northeast','FontSize',fontLegend);
+ylim([0,60]);
 xlim([0,max(xArray)+1]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'pv_generation.eps']);
 end
 
-%% residential load
+mean(pv_pwr)
+
+%% load
 figure_settings; load('results/init_settings.mat');  
 figure('units','inches', 'Position', figure_size_scr);
 is_printed = true;
 xArray = (1:T)/HOUR;
 numLoadBuses = length(loadBus);
-if numLoadBuses > 1
-    for b=1:numLoadBuses   
-        hold on;
-        plot(xArray,grid_load_data(b,:), 'LineWidth', 1);
-    end
-else
-    plot(xArray,grid_load_data(:), 'LineWidth', 1);
-end
+% if numLoadBuses > 1
+%     for b=1:numLoadBuses   
+%         hold on;
+%         plot(xArray,grid_load_data(b,:), 'LineWidth', 1);
+%     end
+% else
+%     plot(xArray,grid_load_data(:), 'LineWidth', 1);
+% end
 
+plot(xArray,sum(active_load,1), 'LineWidth', 2);
+hold on;
+plot(xArray,sum(reactive_load,1), 'LineWidth', 2);
+strLegend = {'active','reactive'};
+legend(strLegend, 'Location','northeast','FontSize',fontLegend);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-ylim([0,max(max(grid_load_data))*1.1]);
+ylim([0,60]);
 xlim([0,max(xArray)+1]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
@@ -91,7 +98,7 @@ ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
 legendStr = {'DC power'};
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
-ylim([0,max(max(yArray))*1.3]);
+ylim([0,60]);
 xlim([0,max(xArray)+1]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
@@ -306,7 +313,8 @@ if is_printed
 end
 
 %% Energy Storages
-figure_settings; load('results/script_ups.mat');  
+% figure_settings; load('results/script_ups.mat');  
+figure_settings; load('results/script_ups_v1.mat');  
 
 vio_default = 1.7; max_vio = max(max(violationFreq(:,:))); violationFreq= violationFreq/max_vio*vio_default;
 
@@ -379,13 +387,13 @@ generation = sum(G_array,2)/HOUR;
 % xArray = 1:length(yArray);
 xArray = ramp_time_generator;
 % bar(xArray, yArray, 0.2);
-% plot(xArray, yArray, patternPeakShaving, 'LineWidth', lineWitdth);
-[hAx, hLine1, hLine2] =  plotyy(xArray, yArray, xArray, generation);
+plot(xArray, yArray, patternVoltageFreq, 'LineWidth', lineWitdth);
+% [hAx, hLine1, hLine2] =  plotyy(xArray, yArray, xArray, generation);
 % ylabel(strViolationFreq,'FontSize',fontAxis);
-set(hLine1,'LineStyle', patternVoltageFreq, 'LineWidth', 2)
-set(hLine2,'LineStyle', patternCost, 'LineWidth', 2)
-ylabel(hAx(1), strViolationFreq) % left y-axis
-ylabel(hAx(2), 'Generation(MWh)') % right y-axis
+% set(hLine1,'LineStyle', patternVoltageFreq, 'LineWidth', 2)
+% set(hLine2,'LineStyle', patternCost, 'LineWidth', 2)
+% ylabel(hAx(1), strViolationFreq) % left y-axis
+% ylabel(hAx(2), 'Generation(MWh)') % right y-axis
 % xlabel('Generator types','FontSize',fontAxis);
 xlabel('Ramp time (mins)','FontSize',fontAxis);
 % set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
@@ -398,11 +406,11 @@ end
 figure('units','inches', 'Position', figure_size_scr);
 temp = squeeze(G_array(1,:,:));
 yArray = sum(temp,2)/HOUR;
-xArray = 1:length(yArray);
+xArray = (1:T)/HOUR;
 % bar(xArray, yArray, 0.2);
-plot(temp');
+plot(xArray,temp);
 ylabel('Power generation (MW)','FontSize',fontAxis);
-% xlabel('Generator types','FontSize',fontAxis);
+xlabel('Hours','FontSize',fontAxis);
 % set(gca,'xticklabel',generator_type,'FontSize',fontAxis);
 legend(generator_type,'Location','southeast','FontSize',fontLegend);
 ylim([0,dc_cap]);
@@ -464,6 +472,7 @@ xlabel(strDelayFlexibility,'FontSize',fontAxis);
 % legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([min(yArray),peak_reduction_max]);
 xlim([0,max(xArray)]);
+grid on;
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
 if is_printed
     print ('-depsc', [fig_path 'peak_shaving_interactive.eps']);

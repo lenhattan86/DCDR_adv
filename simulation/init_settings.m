@@ -2,7 +2,7 @@ clear all; close all; clc;
 cvx_solver Gurobi;
 s_quiet = cvx_quiet(true);
 s_pause = cvx_pause(false);
-% cvx_precision low;
+cvx_precision low;
 % cvx_precision high;
 
 addpath('lib/matpower4.1');
@@ -14,11 +14,13 @@ FIG_PATH = 'figs/';
 RESULT_PATH = 'results/';
 TRACE_PATH = 'traces/';
 
+% IS_GENERATE_DATA = true;
+IS_GENERATE_DATA = false;
+
 IS_OFFICIAL = true;
 
 IS_TESTING_THE_GRID = true;
 
-IS_GENERATE_DATA = 1;
 IS_LOAD_VIOLATION_MATRIX = false;
 verbose = false;
 

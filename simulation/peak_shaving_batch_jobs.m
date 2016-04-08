@@ -18,7 +18,7 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % analysis
 
 %% workload configuration
-bjEnd = [0.5:0.5:5]*HOUR;
+bjEnd = [0.5:0.5:10]*HOUR;
 
 %% Grid settings
 dc_power_after =  zeros(length(bjEnd), T);

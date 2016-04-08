@@ -7,8 +7,8 @@
 
 %TODO: The code may not co-locate the batch jobs.
 
-init_settings
-% init_settings_5_min
+% init_settings
+init_settings_5_min
 % init_settings_15_min
 IS_LOAD = false;
 IS_SAVE = true;

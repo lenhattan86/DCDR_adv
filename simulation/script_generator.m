@@ -14,7 +14,6 @@ G_array = zeros(length(ramp_time_generator), T);
 %% Run simulation.
 % dc_power =  dc_power * 2; % hard code here? need to get rid of this line.
 
-
 disp('---------------------------------------------------')
 pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
 % only DC without scheduling
@@ -34,7 +33,7 @@ progressbar
 SCALE = 10000;
 W = SCALE*W;
 for c = 1:length(ramp_time_generator)
-    %% step 2: Optimize the violation frequency via scheduling the workload  
+    %% step 2: Optimize the violation frequency via scheduling the workload
     [violationFreq(c), X, G] = opt_vio_freq_gen(W, loadLevels, ...
          dc_power, gen_power_cap, ramp_time_generator(c), ...
          false);   

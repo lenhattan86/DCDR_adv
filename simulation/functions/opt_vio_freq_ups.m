@@ -8,6 +8,7 @@ function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
     life_cycle_rate = 1;
     ups_cap = ups_cap*HOUR; % normalize the energy unit
     P_D_e = life_cycle_rate*N_cycles_per_T * DoD *ups_cap;
+    epsilon = POWER_UNIT/2;
     %% Optimzie the violation frequency      
     E_0 = ups_cap/2;
     %X_e_lower_bound = max(- ups_cap* r_discharge, - ups_cap* r_discharge/ramp_time);
@@ -19,7 +20,9 @@ function [violationFreq, X, X_e] = opt_vio_freq_ups(W, loadLevels, ...
         minimize( sum(sum(W.*X)) );
         subject to
             sum(X,1)==ones(1,T); % load selection constraint.
-            sum(loadLevels.*X,1)' == dc_power + X_e;
+%             sum(loadLevels.*X,1)' == dc_power + X_e;
+            sum(loadLevels.*X,1)' <= dc_power + X_e + epsilon;
+            sum(loadLevels.*X,1)' >= dc_power + X_e - epsilon;
             X_e  <= ups_cap  * r_charge;
             X_e  >= X_e_lower_bound;
             if discharge_speed_bound < -X_e_lower_bound
