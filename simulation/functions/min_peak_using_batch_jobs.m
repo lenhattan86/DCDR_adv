@@ -1,4 +1,4 @@
-function [dc_power, bj_after] = min_peak_using_batch_jobs( grid_load_data , a, BS, A_bj, PP, IP, isPlot)
+function [dc_power, bj_after] = min_peak_using_batch_jobs( dc_cap, grid_load_data , a, BS, A_bj, PP, IP, T_sw, isPlot)
     % Scale the power consumption of data center corresponding to the
     % PV generation.    
     T  = length(a); 
@@ -21,6 +21,8 @@ function [dc_power, bj_after] = min_peak_using_batch_jobs( grid_load_data , a, B
             b >= 0;
             sum(b,2) == BS;
             sum(A_bj.*b,2) == BS;
+            dc_power(1) <= dc_cap/T_sw;
+            dc_power(2:T)-dc_power(1:T-1) <= dc_cap/T_sw;
     cvx_end       
     
     if ~strcmp(cvx_status,'Solved');

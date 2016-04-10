@@ -16,14 +16,17 @@ G_array = zeros(length(ramp_time_generator), T);
 
 disp('---------------------------------------------------')
 pvIrradi = irrad_time;% Feb26Irrad(1:sampling_interval:T*sampling_interval);
+% pvIrradi = Feb26Irrad(1:sampling_interval:T*sampling_interval);
 % only DC without scheduling
 violationFreq_upperbound = computeViolationFrequency (power_case, PVcapacity, pvIrradi,...
     minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), dc_power,  ...
     opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, verbose);
-    
+violationFreq_upperbound
 %% step 1: compute weight matrix
-upper_bound = dc_power;
-lower_bound = dc_power - gen_power_cap(1);
+% upper_bound = dc_power;
+% lower_bound = dc_power - gen_power_cap(1);
+lower_bound = ones(T,1)*-dc_cap;
+upper_bound = ones(T,1)*dc_cap;
 [W, loadLevels] =  comp_vio_wei_bounds(power_case, PVcapacity,...
                 pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                 lower_bound, upper_bound, numLoadLevels, ...    
@@ -32,10 +35,11 @@ count = 0;
 progressbar
 SCALE = 10000;
 W = SCALE*W;
+% ramp_time_generator = 1.5;
 for c = 1:length(ramp_time_generator)
     %% step 2: Optimize the violation frequency via scheduling the workload
     [violationFreq(c), X, G] = opt_vio_freq_gen(W, loadLevels, ...
-         dc_power, gen_power_cap, ramp_time_generator(c), ...
+         dc_power, 100*gen_power_cap, ramp_time_generator(c), ...
          false);   
     G_array(c, :) = G;
     count = count + 1;

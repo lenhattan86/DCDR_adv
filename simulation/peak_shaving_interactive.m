@@ -40,15 +40,29 @@ end
 
 %% Grid settings
 
-violationFreq = zeros(length(dcBus), qos_length);
-numLoadLevels = 50;
-a_qos= zeros(qos_length,T);
-dc_power_qos= zeros(qos_length,T);
 %% Run simulation.
-for qos = 1:qos_length
-    [dc_power_after(qos,:), a_after(qos,:)] = min_peak_interactive...
-        ( grid_load_data_pred, a_pred,  aFlexiblitiesLowerBound(qos,:), b_flat, PP, IP);
+
+dc_power_after =  zeros(qos_length, T);
+dc_power_after_tmp = zeros(qos_length, T);
+a_after = zeros(qos_length, T);
+a_after_temp = zeros(qos_length, T);
+
+count = 0 ;
+numOfTests = 10;
+len = numOfTests;
+progressbar
+for iTest = 1:numOfTests
+%     gen_errors;
+    
+    for qos = 1:qos_length
+        [dc_power_after_tmp(qos,:), a_after_tmp(qos,:)] = min_peak_interactive...
+            ( grid_load_data_pred, a_pred,  aFlexiblitiesLowerBound(qos,:), b_flat, PP, IP);       
+    end
+    dc_power_after = dc_power_after + dc_power_after_tmp;
+    a_after = a_after+ a_after_temp;
 end
+dc_power_after = dc_power_after/numOfTests;
+a_after = a_after/numOfTests;
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
 save('results/peak_shaving_interactive.mat');

@@ -14,8 +14,8 @@ FIG_PATH = 'figs/';
 RESULT_PATH = 'results/';
 TRACE_PATH = 'traces/';
 
-% IS_GENERATE_DATA = true;
-IS_GENERATE_DATA = false;
+IS_GENERATE_DATA = true;
+% IS_GENERATE_DATA = false;
 
 IS_OFFICIAL = true;
 

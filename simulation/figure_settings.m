@@ -25,8 +25,10 @@ patternPeakShaving = '-xb';
 patternCooling = '-b';
 patternCost = '--';
 patternVoltageFreq = '-';
+patterndot = ':';
+patterntemp = '-.';
 
-% fig_path = 'figs/';
+%  fig_path = 'figs/';
 fig_path = 'C:/Users/NhatTan/Dropbox/Papers/GreenMetrics16/DCDR_adv/figs/';
 
 set(0, 'units', 'inches')

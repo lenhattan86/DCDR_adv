@@ -22,13 +22,14 @@ bjEnd = [0.5:0.5:10]*HOUR;
 
 %% Grid settings
 dc_power_after =  zeros(length(bjEnd), T);
+dc_power_after_tmp = zeros(length(bjEnd), T);
 bj_after = zeros(length(bjEnd), T);
+bj_after_temp = zeros(length(bjEnd), T);
 
 %% Run simulation.
 
-% step 2: Optimize the violation frequency via scheduling the workload      
+% step 2: Optimize the violation frequency via scheduling the workload  
 for c = 1:length(bjEnd)
-    c
     % create the matrix of arrival and deadline times.
     A_bj = zeros(BN*T,T);
     E = S + ceil(random('Uniform',bjEnd(c),bjEnd(c)));
@@ -41,8 +42,8 @@ for c = 1:length(bjEnd)
         end
     end        
     [dc_power_after(c,:), bj_after(c,:)] = min_peak_using_batch_jobs...
-        (grid_load_data_pred, a_pred, BS_pred, A_bj, PP, IP, false);
-end
+        (dc_cap, grid_load_data_pred, a_pred, BS_pred, A_bj, PP, IP, T_sw, false);
+end 
 %%
 % plotDCsimulation(violationFreq(1,:), p(:), optimalBus, optimal, false);
 save('results/peak_shaving_batch_jobs.mat');

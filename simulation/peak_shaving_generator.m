@@ -3,15 +3,23 @@ init_settings_15_min
 %% parameters
 IS_LOAD = false;
 IS_SAVE = true;
-G_array = zeros(length(ramp_time_generator), T);
+G_array = zeros(length(ramp_time_generator),length(gen_budget), T);
+dc_power_after = zeros(length(ramp_time_generator),length(gen_budget), T);
 %% Run simulation.
+count = 0 ;
+len = length(gen_budget)*length(ramp_time_generator);
 progressbar
-for c = 1:length(gen_price)
-    %% step 2: Optimize the violation frequency via scheduling the workload  
-    [dc_power_after(c,:), G] = min_peak_shaving_gen(grid_load_data_pred, dc_power_pred, ...
-         gen_power_cap, ramp_time_generator(1), gen_budget(c), gen_price(c));
-    G_array(c, :) = G;
-    progressbar(c/length(gen_price))
+for b = 1:length(ramp_time_generator)
+    for c = 1:length(gen_budget)
+        %% step 2: Optimize the violation frequency via scheduling the workload  
+%         [dc_power_after(b, c,:), G] = min_peak_shaving_gen(grid_load_data_pred, dc_power_pred, ...
+%              gen_power_cap, ramp_time_generator(b), gen_budget(c), gen_price(b));
+        [dc_power_after(b, c,:), G] = min_peak_shaving_gen(grid_load_data, dc_power, ...
+            gen_power_cap, ramp_time_generator(b), gen_budget(c), gen_price(b));
+        G_array(b, c, :) = G;
+        count = count + 1;
+        progressbar(count/(len))
+    end
 end
 
 %%

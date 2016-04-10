@@ -42,8 +42,8 @@ yArray = pv_pwr;
 xArray = (1:T)/HOUR;
 figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,yArray, '-k', 'LineWidth', lineWitdth);
-ylabel('Power (MW)','FontSize',fontAxis);
-xlabel('Hours','FontSize',fontAxis);
+ylabel('Power (MW)','FontSize', fontAxis);
+xlabel('Hours','FontSize', fontAxis);
 % legendStr = {'PV generation'};
 % legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,60]);
@@ -70,7 +70,7 @@ numLoadBuses = length(loadBus);
 %     plot(xArray,grid_load_data(:), 'LineWidth', 1);
 % end
 
-plot(xArray,sum(active_load,1), 'LineWidth', 2);
+plot(xArray,sum(active_load,1), patternES, 'LineWidth', 2);
 hold on;
 plot(xArray,sum(reactive_load,1), 'LineWidth', 2);
 strLegend = {'active','reactive'};
@@ -117,8 +117,8 @@ xArray = 100*QoS_delay_relax;
 plot(xArray,yArray, '-ok', 'LineWidth', lineWitdth);
 ylabel(strViolationFreq,'FontSize',fontAxis);
 xlabel(strDelayFlexibility,'FontSize',fontAxis);
-% legendStr = {'QoS'};
-% legend(legendStr,'Location','northeast','FontSize',fontLegend);
+legendStr = {'Interactive'};
+legend(legendStr,'Location','southeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
 xlim([0,max(xArray)]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
@@ -133,13 +133,17 @@ idxes = [1 6];
 xArray = (1:T)/HOUR;
 for q=1:length(idxes)
     hold on;
-    plot(xArray,a_qos(idxes(q),:),'LineWidth', 1);
+    plot(xArray,a_qos(idxes(q),:), 'LineWidth', 1);
 end
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
-legend(legendStr,'Location','northeast','FontSize',fontLegend);
+% legendStr = strread(num2str(QoS_delay_relax(idxes)*100),'%s');
+legendStr = {'Orginal','25%'};
+legend(legendStr,'Location','south','FontSize',fontLegend);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+% change the style of the first line
+hline = findobj(gcf, 'type', 'line')
+set(hline(1), 'LineStyle', patternCost)
 if is_printed
     print ('-depsc', [fig_path 'power_interactive.eps']);
 end
@@ -202,7 +206,7 @@ xArray = bjEnd/HOUR;
 plot(xArray,yArray, '-ok', 'LineWidth', lineWitdth);
 ylabel(strViolationFreq,'FontSize',fontAxis);
 xlabel(strBJDeandline,'FontSize',fontAxis);
-legendStr = {strDataCenter};
+legendStr = {'Batch jobs'};
 legend(legendStr,'Location','northeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
  xlim([0,max(xArray)]);
@@ -257,7 +261,7 @@ ylabel(strViolationFreq,'FontSize',fontAxis);
 xlabel(strRelaxTemperature,'FontSize',fontAxis);
 % xLabels = {'70','68-72','66-74','64-76';'62-78','60-80'};
 % set(gca,'xticklabel',xLabels,'FontSize',fontAxis);
-legendStr = {strDataCenter};
+legendStr = {'Cooling subsystem'};
 legend(legendStr,'Location','southeast','FontSize',fontLegend);
 ylim([0,max(max(yArray))*1.1]);
 xlim([min(xArray),max(xArray)]);
@@ -328,6 +332,12 @@ ylim([0,max(max(yArray))*1.1]);
 legend(battery_types,'Location','southeast','FontSize',fontLegend);
 
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+eline = findobj(gcf, 'type', 'line');
+set(eline(1), 'LineStyle', patternVoltageFreq, 'Color', [0 0 0])
+set(eline(2), 'LineStyle', patternCost, 'Color', [0 0 0])
+set(eline(3), 'LineStyle', patterndot, 'Color', [0 0 0])
+set(eline(4), 'LineStyle', patterntemp, 'Color', [0 0 0])
+
 if is_printed
     print ('-depsc', [fig_path 'script_ups_curves.eps']);
 end
@@ -482,7 +492,7 @@ temp = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
 yArray = temp(length(temp(:,1)),:)';
 xArray = (1:T)/HOUR;
 figure('units','inches', 'Position', figure_size_scr);
-plot(xArray,dc_power+grid_load_data,'LineWidth', lineWitdth);
+plot(xArray,dc_power+grid_load_data,'LineWidth', lineWitdth, 'LineStyle', patternCost);
 hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
@@ -523,15 +533,15 @@ if is_printed
 end
 
 temp = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
-yArray = temp([4],:)';
+yArray = temp([14],:)';
 xArray = (1:T)/HOUR;
 figure('units','inches', 'Position', figure_size_scr);
 plot(xArray,load_demand,'LineWidth', lineWitdth);
 hold on;
-plot(xArray,yArray,'LineWidth', lineWitdth);
+plot(xArray,yArray,'LineWidth', lineWitdth, 'LineStyle', patternCost);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
-legendStr = {'original','2 hours'};
+legendStr = {'original','7 hours'};
 legend(legendStr,'Location','southeast','FontSize',fontLegend);
 ylim([0,max(dc_power + grid_load_data)*1.1]);
 xlim([0,max(xArray)+1]);
@@ -564,11 +574,11 @@ if is_printed
 end
 
 temp = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
-yArray = temp([1 4],:)';
+yArray = temp([4],:)';
 xArray = (1:T)/HOUR;
 figure('units','inches', 'Position', figure_size_scr);
-% plot(xArray,raw_dc_power,'LineWidth', lineWitdth);
-% hold on;
+plot(xArray,load_demand,'LineWidth', lineWitdth);
+hold on;
 plot(xArray,yArray,'LineWidth', lineWitdth);
 ylabel('Power (MW)','FontSize',fontAxis);
 xlabel('Hours','FontSize',fontAxis);
@@ -599,6 +609,8 @@ if 0
         legend('IT power','Cooling power');
     end
 end
+xline = findobj(gcf,'type', 'line');
+set(xline(1), 'LineStyle', patternCost)
 
 %% energy storages
 figure_settings; load('results/peak_shaving_ups.mat');  
@@ -635,6 +647,11 @@ legend(legendStr,'Location','southeast','FontSize',fontLegend);
 ylim([0,max(dc_power + grid_load_data)*1.1]);
 xlim([0,max(xArray)+1]);
 set (gcf, 'PaperUnits', 'inches', 'PaperPosition', figure_size);
+eline = findobj(gcf, 'type', 'line');
+set(eline(1), 'LineStyle', patternVoltageFreq)
+set(eline(2), 'LineStyle', patternCost)
+set(eline(3), 'LineStyle', patterndot)
+set(eline(4), 'LineStyle', patterntemp)
 if is_printed
     print ('-depsc', [fig_path 'peak_shaving_ups_power.eps']);
 end
@@ -646,11 +663,18 @@ load_demand = dc_power+grid_load_data;
 peak_demand = max(load_demand);
 
 figure('units','inches', 'Position', figure_size_scr);
-total_load = dc_power_after + ones(size(dc_power_after,1),1)*grid_load_data';
-yArray = (peak_demand-max(total_load'))/peak_demand*100;
-% xArray = 1:length(yArray);
 xArray = gen_budget;
-plot(xArray,yArray,patternPeakShaving,'LineWidth', lineWitdth);
+for b = 1:length(ramp_time_generator)
+    dc_power_after_tmp = squeeze(dc_power_after(b,:,:));
+    total_load = dc_power_after_tmp + ones(size(dc_power_after_tmp,1),1)*grid_load_data';
+    yArray = (peak_demand-max(total_load'))/peak_demand*100;
+%     plot(xArray,yArray,patternPeakShaving,'LineWidth', lineWitdth);
+    hold on;
+%     plot(xArray,yArray,patternPeakShaving,'LineWidth', lineWitdth);
+    plot(xArray,yArray,'LineWidth', lineWitdth);
+end
+legendStr = generator_type;
+legend(legendStr,'Location','southeast','FontSize',fontLegend-2);
 % bar(xArray, yArray, 0.2);
 xlabel('Generation bugdet (USD)','FontSize',fontAxis);
 ylim([0,peak_reduction_max]);
@@ -681,12 +705,13 @@ if is_printed
     print ('-depsc', [fig_path 'peak_shaving_generator_power.eps']);
 end
 
+b = 1;
 c=3;
-emissions_NO = NOx*sum(G_array(c, :))/HOUR;
-emissions_CO = CO*sum(G_array(c, :))/HOUR;
-emissions_HC = HC*sum(G_array(c, :))/HOUR;
-emissions_PM = PM*sum(G_array(c, :))/HOUR;
-emissions_SO2 = SO2*sum(G_array(c, :))/HOUR;
+emissions_NO = NOx*sum(G_array(b, c, :))/HOUR;
+emissions_CO = CO*sum(G_array(b, c, :))/HOUR;
+emissions_HC = HC*sum(G_array(b, c, :))/HOUR;
+emissions_PM = PM*sum(G_array(b, c, :))/HOUR;
+emissions_SO2 = SO2*sum(G_array(b, c, :))/HOUR;
 emissions = [emissions_NO; emissions_CO; emissions_HC; emissions_PM; emissions_SO2]';
 
 yArray = total_load;

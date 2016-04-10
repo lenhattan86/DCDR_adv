@@ -14,6 +14,7 @@ t_differences = t_differences(2:length(t_differences));
 dc_power_after = zeros(length(t_differences),T);
 P_cooling_after = zeros(length(t_differences),T);
 Temp_dc = zeros(length(t_differences),T);
+cm = 0.1;
 for c = 1:length(t_differences)        
     TempRange  = [t_RA_avg - t_differences(c) t_RA_avg + t_differences(c)];        
     P_IT = dc_power_pred/PUE;

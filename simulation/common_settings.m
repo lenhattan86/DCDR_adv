@@ -3,7 +3,8 @@ time_interval = 5; % in minutes
 HOUR = 60/sampling_interval; % number of timeslots an hour.
 MINUTE = 1/sampling_interval;
 DAY = 24*HOUR; % number of timeslots a day.
-T = 1*DAY; %1440; % per minute data
+days = 1;
+T = days*DAY; %1440; % per minute data
 % T = 2*HOUR; % 
 
 numLoadLevels = 50;
@@ -12,19 +13,21 @@ numLoadLevels = 50;
 
 MWh = sampling_interval/HOUR; % energy a sampling in`````terval.
 
+numOfTests = 100;
 
 %% Grid settings
-power_case = case47custom; dcBus = 5; pvBus = 45; loadBus = 0;
+power_case = case47custom; dcBus = 10; pvBus = 45; loadBus = 0;
 %     power_case = case47custom; dcBus = 2; pvBus = 2; loadBus = 2;
 %     power_case = case57; dcBus = 4; pvBus = 11; loadBus = 40;
 numBuses = size(power_case.bus,1);
 
 %% PV generation
 load([TRACE_PATH 'testdayirrad.mat']);
-PVcapacity = 100;
+PVcapacity = 60;
 %     PVcapacity = 0;
-day = 6;
-irrad_time = Feb2012Irrad(1+day*1440:sampling_interval:T*sampling_interval+day*1440);
+day = 3;
+% day = 1;
+irrad_time = Feb2012Irrad(1+(day-1)*1440:sampling_interval:T*sampling_interval+(day-1)*1440);
 pct_flux = irrad_time/1000;
 pv_pwr = pct_flux*PVcapacity; 
 pv_pwr_mean = mean(pv_pwr)
@@ -39,9 +42,11 @@ reactive_load = ones(numBuses, T);
 for t=1:T
     active_load(:,t) = power_case.bus(:,3)*pct_factors(t);
     reactive_load(:,t) = power_case.bus(:,4)*pct_factors(t);
+    active_load_mean = mean(sum(active_load))
+    reactive_load_mean = mean(sum(reactive_load))
 end
 
-load_mean = 5; % MW
+load_mean = 0.01; % MW
 
 [Hour_End,COAST,EAST,FAR_WEST,NORTH,NORTH_C,SOUTHERN,SOUTH_C,WEST,ERCOT] ...
     = import_grid_load('traces/ecort_load_2016.xls');    
@@ -145,22 +150,21 @@ if ~is_backup
     OM_cost = 0.6;
     capital_cost = 0;
 else
-    generator_type       = {'Diesel', 'D. DPF', 'Gas', 'Gas Micro.'};
-%     ramp_time_generator  = [1.5 1.5 1.5 1.5] /sampling_interval; % minutes --> time slots
-    ramp_time_generator  = [1:15:46, 47:2:55] /sampling_interval; % minutes --> time slots
+    generator_type       = {'Diesel', 'Die. DPF', 'Gas', 'Gas Micro.'};
+    ramp_time_generator  = [1.5 1.5 1.5 1.5] /sampling_interval; % minutes --> time slots
+%     ramp_time_generator  = [1:15:46, 47:2:55] /sampling_interval; % minutes --> time slots
     gen_cap              = [inf inf inf inf inf];
     gen_power_cap        = dc_cap;
 
     emission_cap         = [inf inf inf inf inf];
-    NOx             = [8.1 8.1 5.8 0.3];
+    NOx             = [8.1 8.1 5.8 0.3]; % g/kWh
     CO              = [2.3 2.3 1.7 0.4];
     HC              = [0.9 0.9 0.8 0.1];
     PM              = [0.5 0.03 0.03 0.03];
     SO2             = [2.3 0.01 0 0];
     
-    gen_budget      = 0:500:5000; % $
-%     gen_price       = [16 20 18 22]/100/HOUR*1000;%($kWh --> $/MW-interval)
-    gen_price       = 16*ones(1,length(gen_budget))/100/HOUR*1000;%($kWh --> $/MW-interval)
+    gen_budget      = 200:200:5000; % $
+    gen_price       = [16 20 18 22]/100*1000/HOUR;%(cents/kWh --> $/MWh)
     
 end
 
@@ -220,8 +224,10 @@ dc_power_mean = mean(dc_power)
 p_SW = 0.4;
 
 % interactive & QoS
-util_level = 0.3; 
+util_level = 0.4; 
 mu = 1;
+
+T_sw = 5/sampling_interval ;% mins.
 
 %% cooling
 %  http://www.accuweather.com/en/us/new-york-ny/10007/hourly-weather-forecast/349727?hour=0
@@ -251,23 +257,16 @@ t_RA_avg = 70;
 % water chiller
 %gamma = P_wc *(t_RA_avg^temp_power_wc)/(a_avg); % P_wc  = gamma/(t_RA^temp_power) * d
 gamma = PUE-1;
-beta = 1;
+beta = 0.9; % heat to IT power ratio /pi
 cm = 2*(sampling_interval/15);
 
 %% Electricity grid
 total_load = dc_power +grid_load_data;
 %% Prediction errors
 ERR = 0.05;
+%  ERR = 0;
 
-dc_load_errs = randn(T,1)*ERR*mean(dc_power);
-BS_errs = randn(length(BS),1)*ERR*mean(BS);
-a_errs = randn(T,1)*ERR*mean(a);
-grid_load_data_errs = randn(T,1)*ERR*mean(grid_load_data);
-
-dc_power_pred = max(dc_power + dc_load_errs,0);
-BS_pred = max(BS+BS_errs,0);
-a_pred = max(a + a_errs,0);
-grid_load_data_pred = max(grid_load_data_errs+grid_load_data,0);
+gen_errors;
 
 %% DR programs  
 % load data traces

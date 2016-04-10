@@ -17,11 +17,10 @@ opt = mpoption('VERBOSE', 0, 'OUT_ALL', 0); % Verbose = 0 suppresses
 % convergence printed output, out_all = 0 suppresses printed results of
 % analysis
 
-server_power = PP; % equal to peak power.
-M = a/server_power; % number of servers.
-lamda = M*util_level;
+lamda = a*util_level;
+max_util_level = 0.8;
 %util_level = arrival_rate/M;
-QoS_delay = ones(T,1)./(mu-util_level);
+QoS_delay = ones(T,1)./(mu-lamda./a);
 % a = M*server_power
 
 %% workload configuration
@@ -34,14 +33,15 @@ qos_length              = length(QoS_delay_relax);
 aFlexiblitiesUpperBound = zeros(qos_length, length(a));
 aFlexiblitiesLowerBound = zeros(qos_length, length(a));
 QoS_delay_after         = zeros(qos_length,T);
+
 for qos = 1:qos_length
     QoS_delay_slow_down = (1 + QoS_delay_relax(qos)) * QoS_delay;
     QoS_delay_speed_up  = (1 - QoS_delay_relax(qos)) * QoS_delay;
     
 %     aFlexiblitiesUpperBound(qos,:) = service_rate - QoS_delay_slow_down;
 %     aFlexiblitiesLowerBound(qos,:) = service_rate - QoS_delay_speed_up;
-    aFlexiblitiesUpperBound(qos,:) = server_power*lamda./(mu - ones(T,1)./QoS_delay_speed_up);
-    aFlexiblitiesLowerBound(qos,:) = server_power*lamda./(mu - ones(T,1)./QoS_delay_slow_down);
+    aFlexiblitiesUpperBound(qos,:) = lamda./(mu - ones(T,1)./QoS_delay_speed_up);
+    aFlexiblitiesLowerBound(qos,:) = lamda./(mu - ones(T,1)./QoS_delay_slow_down);
 end
 
 %% Grid settings
@@ -59,11 +59,11 @@ for b = 1:length(dcBus)
         %TODO: step 2: convert interactive_QoS_delay to aFlexiblities
         [violationFreq(b,qos), a_qos(qos,:), dc_power_qos(qos,:)] = nonviolationInteractive(power_case, PVcapacity, pvIrradi, ...
             minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
-            dc_power, a, dc_cap, ...
+            dc_power, a, dc_cap*peak_to_cap_ratio, ...
             aFlexiblitiesUpperBound(qos,:), aFlexiblitiesLowerBound(qos,:), ...
-            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, numLoadLevels, verbose);  
-        m = a_qos(qos,:)/server_power;
-        QoS_delay_after(qos,:) = ones(1,T)./(mu-lamda'./m);
+            opt, dcBus, numBuses, pvBus, grid_load_data,loadBus, numLoadLevels, IDLE_POWER, verbose);  
+%         m = a_qos(qos,:)/server_power;
+        QoS_delay_after(qos,:) = ones(1,T)./(mu-lamda'./a_qos(qos,:));
     end
 end
 violationFreq

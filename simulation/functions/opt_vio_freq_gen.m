@@ -14,8 +14,8 @@ function [violationFreq, X, G] = opt_vio_freq_gen(W, loadLevels, ...
             sum(loadLevels.*X,1)' == dc_power - G;
             G  <= gen_power_cap;
             G  >= 0;
-            G(1) <= ramp_rate;
-            G(2:T) - G(1:T-1)  <= ramp_rate;
+%             G(1) <= ramp_rate;
+%             G(2:T) - G(1:T-1)  <= ramp_rate;
     cvx_end
      
     if ~strcmp(cvx_status,'Solved');

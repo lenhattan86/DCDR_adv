@@ -35,7 +35,7 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
 
         % Bounds of DC
         upperBound = min(dc_power(t) - interactive(t) + aFlexiblitiesUpperBound(t), dc_cap);
-        lowerBound = max(dc_power(t) - interactive(t) + aFlexiblitiesLowerBound(t), 0);
+        lowerBound = max(dc_power(t) - interactive(t) + aFlexiblitiesLowerBound(t), B(t) + IDLE_POWER(t));
 
         maxVoltage = temp_case.bus(1,12);
         minVoltage = temp_case.bus(1,13);
@@ -85,7 +85,7 @@ function [violationFreq, a_qos, dc_power_qos] = nonviolationInteractive(pwr_case
         X(t) = selectedLoadsForDC(idx);
         out_bounds = out_bounds + smallestViolations;
     end
-    a_qos = X - B' - IDLE_POWER;
+    a_qos = X - B' - IDLE_POWER';
     dc_power_qos = X;    
     violationFreq = out_bounds / (T*numBuses);
 end
