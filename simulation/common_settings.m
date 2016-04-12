@@ -23,11 +23,12 @@ numBuses = size(power_case.bus,1);
 
 %% PV generation
 load([TRACE_PATH 'testdayirrad.mat']);
-PVcapacity = 60;
+PVcapacity = 30;
 %     PVcapacity = 0;
 day = 3;
 % day = 1;
-irrad_time = Feb2012Irrad(1+(day-1)*1440:sampling_interval:T*sampling_interval+(day-1)*1440);
+% irrad_time = Feb2012Irrad(1+(day-1)*1440:sampling_interval:T*sampling_interval+(day-1)*1440);
+irrad_time = Feb26Irrad;
 pct_flux = irrad_time/1000;
 pv_pwr = pct_flux*PVcapacity; 
 pv_pwr_mean = mean(pv_pwr)
@@ -46,7 +47,7 @@ for t=1:T
     reactive_load_mean = mean(sum(reactive_load))
 end
 
-load_mean = 0.01; % MW
+load_mean = 15; % MW
 
 [Hour_End,COAST,EAST,FAR_WEST,NORTH,NORTH_C,SOUTHERN,SOUTH_C,WEST,ERCOT] ...
     = import_grid_load('traces/ecort_load_2016.xls');    

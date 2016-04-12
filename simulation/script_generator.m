@@ -23,18 +23,22 @@ violationFreq_upperbound = computeViolationFrequency (power_case, PVcapacity, pv
     opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, verbose);
 violationFreq_upperbound
 %% step 1: compute weight matrix
-% upper_bound = dc_power;
-% lower_bound = dc_power - gen_power_cap(1);
-lower_bound = ones(T,1)*-dc_cap;
-upper_bound = ones(T,1)*dc_cap;
+upper_bound = dc_power;
+lower_bound = dc_power - gen_power_cap(1);
+% lower_bound = ones(T,1)*-dc_cap;
+% upper_bound = ones(T,1)*dc_cap;
 [W, loadLevels] =  comp_vio_wei_bounds(power_case, PVcapacity,...
                 pvIrradi, minuteloadFeb2012(36001:sampling_interval:36000+T*sampling_interval), ...
                 lower_bound, upper_bound, numLoadLevels, ...    
                 opt, dcBus, numBuses, pvBus, grid_load_data, loadBus, false);
+SCALE = T;
+W = SCALE*W;
+plot(W(:,1:100:301));
+
+return;
 count = 0;
 progressbar
-SCALE = 10000;
-W = SCALE*W;
+
 % ramp_time_generator = 1.5;
 for c = 1:length(ramp_time_generator)
     %% step 2: Optimize the violation frequency via scheduling the workload
