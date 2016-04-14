@@ -21,9 +21,8 @@ function [W, loadLevels] = comp_vio_wei_bounds(pwr_case, pv_cap, irrad_time,...
         pv_pwr = pct_flux*pv_cap; 
         
         %% Todo:(for Jie) Adding a conventional generator
-        if conv_power_bus > 0
-            temp_case.bus(conv_power_bus,3) = temp_case.bus(conv_power_bus,3) - conv_power(i);
-        end
+        for t 
+        temp_case.bus(conv_power_bus,3) = temp_case.bus(conv_power_bus,3) - conv_power; 
         
         % set up the grid load on a bus
         if isscalar(loadBus)

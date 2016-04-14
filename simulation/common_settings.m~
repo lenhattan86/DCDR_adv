@@ -36,7 +36,7 @@ pv_pwr = pct_flux*PVcapacity;
 pv_pwr_mean = mean(pv_pwr);
 
 %% Todo:(for Jie) Allow us to switch from PV generator to a wind generator
-% if ISPV
+if ISPV
     
 
 %% load demand in the electricity grid.
