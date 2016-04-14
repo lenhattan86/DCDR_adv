@@ -33,6 +33,8 @@ pct_flux = irrad_time/1000;
 pv_pwr = pct_flux*PVcapacity; 
 pv_pwr_mean = mean(pv_pwr)
 
+%% Todo:(for Jie) Allow us to switch from PV generator to a wind generator
+
 %% load demand in the electricity grid.
 IS_GRID_LOAD = true;
 
@@ -78,7 +80,7 @@ else
         grid_load_data(b,:) = temp*scale_tmp;
     end
 end
-
+%% Todo:(for Jie) Adding a conventional generator
 
 
 

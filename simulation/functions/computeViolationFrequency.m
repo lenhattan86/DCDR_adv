@@ -13,6 +13,8 @@ function [violationFrequency] = computeViolationFrequency (pwr_case, pv_cap, irr
         pct_flux = irrad_time(i)/1000;
         pv_pwr = pct_flux*pv_cap; 
         
+        %% Todo:(for Jie) Adding a conventional generator
+        
 %         conventional_power = 10;
 %         pv_pwr = conventional_power + pv_pwr;
         
