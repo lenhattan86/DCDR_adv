@@ -284,29 +284,25 @@ ERR = 0.05;
 gen_errors;
 
 %% DR programs  
-% load data traces
-% TOU: Time of Use pricing - http://cleantechnica.com/2011/12/27/time-of-day-pricing-in-texas/
-%http://www.businesswire.com/news/home/20111117005294/en/TXU-Energy-Offers-Deep-Nighttime-Discounts-Electricity
-night_rate = 0.05;%6.8e-2; 
-peak_rate = 21.9e-2;
-off_peak_rate = 0.06;%9.2e-2;
-p_TOU_trace = off_peak_rate*ones(1,24);
+noti_ahead = 1*HOUR;
+dr_noti_timestamps = 1;
 
-for hr = 1:24
-    if hr <= 6 || hr >= 22 % night hours
-        p_TOU_trace(hr) = night_rate;
-    elseif hr >= 13 && hr <= 18 % peak hours
-        p_TOU_trace(hr) = peak_rate;
-    end
-end
+T_schedule = 12*HOUR;
 
-% Normal DR %%%%%%%%%%
-p_DR  = ones(1,T);
+dr_timestamps = dr_noti_timestamps + noti_ahead;
+t_dr_events     = zeros(1,T); % Timestamp of DR event
+t_dr_events(dr_timestamps)  = 1; %
 
-t_raw = linspace(0,T,24);
-t = linspace(0,T,T);
-p_TOU = interp1q(t_raw',p_TOU_trace',t');    
+dr_frequency = 1;
 
-p_RTP = ones(1,T);    
+T_duration = 1*HOUR;
+durationsOfDR = zeros(1,T); % Duration of DR event
+durations = dr_timestamps + 0:(T_duration-1);
+durationsOfDR(durations) = 1;
 
-% Emergency based DR %%%%%%%%%%    
+%P_target = 0.1; % MW increase
+% P_target = -0.1; % MW reduction
+P_target = -0.01; % MW reduction
+
+dr_rate = 0.5; % USD/kWh
+dr_rates = dr_rate*ones(1,T); %
